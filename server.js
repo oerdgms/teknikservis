@@ -5,7 +5,7 @@ const cors = require('cors');
 const crypto = require('crypto');
 
 const app = express();
-const PORT = Number(process.env.PORT || 3000);
+const PORT = Number(process.env.PORT || 8972);
 const HOST = process.env.HOST || '0.0.0.0';
 const DB_FILE = path.join(__dirname, 'db.json');
 const BACKUP_DIR = path.join(__dirname, 'backups');
@@ -42,7 +42,7 @@ function normalizeDb(raw) {
   };
 }
 function readDb(){ ensureStorage(); return normalizeDb(JSON.parse(fs.readFileSync(DB_FILE,'utf8'))); }
-function writeDb(data){ ensureStorage(); const normalized=normalizeDb(data); normalized.version=2.2; const temp=DB_FILE+'.tmp'; fs.writeFileSync(temp,JSON.stringify(normalized,null,2),'utf8'); fs.renameSync(temp,DB_FILE); return normalized; }
+function writeDb(data){ ensureStorage(); const normalized=normalizeDb(data); normalized.version=2.21; const temp=DB_FILE+'.tmp'; fs.writeFileSync(temp,JSON.stringify(normalized,null,2),'utf8'); fs.renameSync(temp,DB_FILE); return normalized; }
 function backupCurrentDb(){ if(!fs.existsSync(DB_FILE)) return; const stamp=new Date().toISOString().replace(/[:.]/g,'-'); fs.copyFileSync(DB_FILE,path.join(BACKUP_DIR,`db_${stamp}.json`)); const files=fs.readdirSync(BACKUP_DIR).filter(x=>x.endsWith('.json')).sort().reverse(); files.slice(20).forEach(f=>{try{fs.unlinkSync(path.join(BACKUP_DIR,f))}catch(_){}}); }
 function hashPassword(password,salt=crypto.randomBytes(16).toString('hex')){ const hash=crypto.scryptSync(String(password),salt,64).toString('hex'); return `${salt}:${hash}`; }
 function verifyPassword(password,stored=''){ const [salt,hash]=String(stored).split(':'); if(!salt||!hash)return false; const calc=crypto.scryptSync(String(password),salt,64); const saved=Buffer.from(hash,'hex'); return saved.length===calc.length && crypto.timingSafeEqual(saved,calc); }
@@ -53,7 +53,7 @@ function requireAuth(req,res,next){ const u=sessionUser(req); if(!u)return res.s
 function requireAdmin(req,res,next){ if(req.user?.role!=='Yönetici')return res.status(403).json({error:'Yönetici yetkisi gerekli'}); next(); }
 function publicData(db){ const {users,...safe}=db; return safe; }
 
-app.get('/api/health',(_req,res)=>res.json({ok:true,version:'2.2.0'}));
+app.get('/api/health',(_req,res)=>res.json({ok:true,version:'2.2.1'}));
 app.get('/api/auth/status',(req,res)=>{ const db=readDb(); const u=sessionUser(req); res.json({setupRequired:db.users.length===0,authenticated:!!u,user:u||null}); });
 app.post('/api/auth/setup',(req,res)=>{ const db=readDb(); if(db.users.length)return res.status(409).json({error:'İlk kurulum tamamlanmış'}); const name=String(req.body.name||'').trim(), username=String(req.body.username||'').trim(), password=String(req.body.password||''); if(!name||username.length<3||password.length<6)return res.status(400).json({error:'Ad, en az 3 karakter kullanıcı adı ve en az 6 karakter şifre gerekli'}); const user={id:Date.now(),name,username,role:'Yönetici',active:true,passwordHash:hashPassword(password),createdAt:new Date().toISOString()}; db.users.push(user); backupCurrentDb(); writeDb(db); setSession(res,user); res.json({success:true,user:{id:user.id,name:user.name,username:user.username,role:user.role}}); });
 app.post('/api/auth/login',(req,res)=>{ const db=readDb(); const username=String(req.body.username||'').trim().toLocaleLowerCase('tr-TR'); const user=db.users.find(x=>x.active!==false&&String(x.username).toLocaleLowerCase('tr-TR')===username); if(!user||!verifyPassword(req.body.password,user.passwordHash))return res.status(401).json({error:'Kullanıcı adı veya şifre hatalı'}); setSession(res,user); res.json({success:true,user:{id:user.id,name:user.name,username:user.username,role:user.role}}); });
@@ -69,4 +69,4 @@ app.post('/api/data',requireAuth,(req,res)=>{ try{ backupCurrentDb(); const curr
 app.use(express.static(__dirname));
 app.use((err,_req,res,_next)=>{console.error(err);res.status(500).json({error:'Sunucu hatası'})});
 ensureStorage();
-app.listen(PORT,HOST,()=>{ console.log('===================================================='); console.log('Sistem Bilgisayar Teknik Servis Pro v2.2 çalışıyor'); console.log(`Bu bilgisayardan: http://localhost:${PORT}`); console.log(`Yerel ağdan: http://[BILGISAYAR-IP]:${PORT}`); console.log('===================================================='); });
+app.listen(PORT,HOST,()=>{ console.log('===================================================='); console.log('Sistem Bilgisayar Teknik Servis Pro v2.2.1 çalışıyor'); console.log(`Bu bilgisayardan: http://localhost:${PORT}`); console.log(`Yerel ağdan: http://[BILGISAYAR-IP]:${PORT}`); console.log('===================================================='); });

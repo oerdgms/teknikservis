@@ -33,3 +33,11 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - GitHub Actions ile Windows kurulum EXE üretmek için yeni workflow eklendi.
 - Kurulum paketi Node.js çalışma zamanını kendi içinde taşır; hedef bilgisayarda ayrıca Node.js kurulumu gerekmez.
 - Kullanıcı verisini korumak için güncelleme kurulumlarında mevcut db.json üzerine yazılmaz.
+
+## v2.2.1 - Başlatma Hotfix
+- Windows kurulumundan sonra sayfanın açılmaması için başlatıcı yenilendi.
+- Varsayılan port 3000 yerine 8972 yapıldı.
+- Sunucu açılmadan tarayıcı açılmıyor; `/api/health` ile hazır olma kontrolü yapılıyor.
+- Başlatma ve sunucu hataları `logs/startup.log` ve `logs/server-error.log` dosyalarına yazılıyor.
+- Sunucu başlatılamazsa kullanıcıya hata penceresi gösteriliyor.
+- GitHub Actions installer adı `TeknikServisPro_v2_2_1_Setup.exe` olarak güncellendi.

@@ -11,6 +11,7 @@ on:
       - "package-lock.json"
       - "baslat.cmd"
       - "baslat.vbs"
+      - "launcher.ps1"
       - "installer/**"
       - ".github/workflows/windows-installer.yml"
 
@@ -39,7 +40,7 @@ jobs:
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force dist\runtime | Out-Null
-          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,baslat.cmd,baslat.vbs -Destination dist
+          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,baslat.cmd,baslat.vbs,launcher.ps1 -Destination dist
           Copy-Item node_modules -Destination dist -Recurse
           Copy-Item (Get-Command node).Source -Destination dist\runtime\node.exe
 
@@ -51,12 +52,12 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_2_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+          if (!(Test-Path "release\TeknikServisPro_v2_2_1_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
 
       - name: Kurulum dosyasını artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.2-Windows-Setup
-          path: release/TeknikServisPro_v2_2_Setup.exe
+          name: TeknikServisPro-v2.2.1-Windows-Setup
+          path: release/TeknikServisPro_v2_2_1_Setup.exe
           if-no-files-found: error
           retention-days: 30
