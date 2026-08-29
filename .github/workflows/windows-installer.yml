@@ -1,0 +1,62 @@
+name: Teknik Servis Pro - Windows Kurulum
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - "index.html"
+      - "server.js"
+      - "package.json"
+      - "package-lock.json"
+      - "baslat.cmd"
+      - "baslat.vbs"
+      - "installer/**"
+      - ".github/workflows/windows-installer.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-installer:
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Kaynak kodu al
+        uses: actions/checkout@v4
+
+      - name: Node.js 20 kur
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Bağımlılıkları kur
+        run: npm ci --omit=dev
+
+      - name: Dağıtım klasörünü hazırla
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force dist\runtime | Out-Null
+          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,baslat.cmd,baslat.vbs -Destination dist
+          Copy-Item node_modules -Destination dist -Recurse
+          Copy-Item (Get-Command node).Source -Destination dist\runtime\node.exe
+
+      - name: Inno Setup kur
+        shell: powershell
+        run: choco install innosetup --no-progress -y
+
+      - name: Windows kurulum EXE oluştur
+        shell: powershell
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
+          if (!(Test-Path "release\TeknikServisPro_v2_2_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+
+      - name: Kurulum dosyasını artifact olarak yükle
+        uses: actions/upload-artifact@v4
+        with:
+          name: TeknikServisPro-v2.2-Windows-Setup
+          path: release/TeknikServisPro_v2_2_Setup.exe
+          if-no-files-found: error
+          retention-days: 30
