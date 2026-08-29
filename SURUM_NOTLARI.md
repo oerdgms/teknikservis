@@ -41,3 +41,13 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - Başlatma ve sunucu hataları `logs/startup.log` ve `logs/server-error.log` dosyalarına yazılıyor.
 - Sunucu başlatılamazsa kullanıcıya hata penceresi gösteriliyor.
 - GitHub Actions installer adı `TeknikServisPro_v2_2_1_Setup.exe` olarak güncellendi.
+
+## v2.2.2 - EXE Başlatıcı ve Kısayol Logosu
+- Hatalı VBScript başlatıcı tamamen kaldırıldı.
+- `TeknikServisPro.exe` adlı Windows launcher eklendi.
+- Launcher PowerShell başlangıç denetimini görünmez şekilde çalıştırır.
+- Sunucu `8972` portunda sağlık kontrolünden geçince tarayıcı açılır.
+- Başlangıç ve sunucu hata logları `logs` klasörüne yazılır.
+- Masaüstü ve Başlat menüsü kısayollarına Teknik Servis Pro logosu eklendi.
+- Aynı logo Windows kurulum sihirbazı ve kaldırma kaydında kullanılır.
+- GitHub Actions launcher EXE'yi otomatik derleyip Inno Setup kurulumunu üretir.

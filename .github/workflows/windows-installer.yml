@@ -9,9 +9,9 @@ on:
       - "server.js"
       - "package.json"
       - "package-lock.json"
-      - "baslat.cmd"
-      - "baslat.vbs"
       - "launcher.ps1"
+      - "Launcher.cs"
+      - "assets/**"
       - "installer/**"
       - ".github/workflows/windows-installer.yml"
 
@@ -36,11 +36,21 @@ jobs:
       - name: Bağımlılıkları kur
         run: npm ci --omit=dev
 
+      - name: Windows launcher EXE oluştur
+        shell: powershell
+        run: |
+          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
+          if (!(Test-Path $csc)) { throw "C# derleyicisi bulunamadı: $csc" }
+          & $csc /nologo /target:winexe /optimize+ /reference:System.Windows.Forms.dll /win32icon:assets\TeknikServisPro.ico /out:TeknikServisPro.exe Launcher.cs
+          if (!(Test-Path "TeknikServisPro.exe")) { throw "Launcher EXE oluşturulamadı." }
+
       - name: Dağıtım klasörünü hazırla
         shell: powershell
         run: |
           New-Item -ItemType Directory -Force dist\runtime | Out-Null
-          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,baslat.cmd,baslat.vbs,launcher.ps1 -Destination dist
+          New-Item -ItemType Directory -Force dist\assets | Out-Null
+          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,launcher.ps1,TeknikServisPro.exe -Destination dist
+          Copy-Item assets\TeknikServisPro.ico -Destination dist\assets\TeknikServisPro.ico
           Copy-Item node_modules -Destination dist -Recurse
           Copy-Item (Get-Command node).Source -Destination dist\runtime\node.exe
 
@@ -52,12 +62,12 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_2_1_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+          if (!(Test-Path "release\TeknikServisPro_v2_2_2_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
 
       - name: Kurulum dosyasını artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.2.1-Windows-Setup
-          path: release/TeknikServisPro_v2_2_1_Setup.exe
+          name: TeknikServisPro-v2.2.2-Windows-Setup
+          path: release/TeknikServisPro_v2_2_2_Setup.exe
           if-no-files-found: error
           retention-days: 30
