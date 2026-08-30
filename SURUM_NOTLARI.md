@@ -1,3 +1,11 @@
+# Teknik Servis Pro v2.3.2
+
+- Mobil hamburger menü öğeleri tam kart yüzeyinden tıklanabilir hale getirildi ve seçim sonrası menü otomatik kapanır.
+- Mobil üst bar butonları küçültüldü; başlık için daha fazla alan açıldı.
+- Dashboard “Servis Kontrol Merkezi” açıklaması ve yenile butonu mobilde çakışmayacak şekilde düzenlendi.
+- “Son Servis Hareketleri” masaüstünde tablo olarak korunurken mobilde kompakt dokunulabilir servis kartlarına dönüştürüldü.
+- Mobil servis kartlarında servis no, müşteri, cihaz, durum ve açık bakiye birlikte gösterilir; karta dokununca servis detayı açılır.
+
 # v2.0.0 Sürüm Notları
 
 Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısına geçildi.

@@ -1,7 +1,7 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.3.1"
+#define MyAppVersion "2.3.2"
 #define MyAppPublisher "Teknik Servis Pro"
-#define PythonExe "runtime\\py312_231\\pythonw.exe"
+#define PythonExe "runtime\\py312_232\\pythonw.exe"
 
 [Setup]
 AppId={{E1239C99-6B63-4B71-A1E5-12395B9E2200}
@@ -13,7 +13,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\release
-OutputBaseFilename=TeknikServisPro_v2_3_1_Setup
+OutputBaseFilename=TeknikServisPro_v2_3_2_Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -53,7 +53,7 @@ procedure StopOldTechnicalService;
 var
   ResultCode: Integer;
 begin
-  { v2.3.1 ve sonraki sürümler: önce yerel sunucudan temiz kapanış iste. }
+  { v2.3.2 ve sonraki sürümler: önce yerel sunucudan temiz kapanış iste. }
   if FileExists(ExpandConstant('{sys}\curl.exe')) then
     Exec(ExpandConstant('{sys}\curl.exe'), '-s -X POST http://127.0.0.1:8972/api/shutdown', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
 
