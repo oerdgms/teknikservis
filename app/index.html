@@ -188,6 +188,28 @@ function paymentBadge(r){const b=balance(r);return b<=.01?'<span class="status-p
 function isClosed(r){return ['Teslim Edildi','İptal / İade'].includes(r.status)}
 function isOverdue(r){return !isClosed(r)&&r.estimatedDate&&r.estimatedDate<today()}
 function nextServiceNo(){const y=new Date().getFullYear();let max=0;appData.serviceRecords.forEach(r=>{const m=String(r.serviceNo||'').match(/SRV-(\d{4})-(\d+)/);if(m&&+m[1]===y)max=Math.max(max,+m[2])});return`SRV-${y}-${String(max+1).padStart(4,'0')}`}
+function clearServiceForm(){
+  $('serviceForm').reset();$('recordId').value='';$('formTitle').textContent='Yeni Servis Kaydı';
+  $('status').innerHTML=STATUSES.map(x=>`<option>${esc(x)}</option>`).join('');$('status').value='Kayıt Alındı';
+  $('priority').value='Normal';$('deviceType').value='Notebook';$('entryDate').value=today();$('exitDate').value='';$('estimatedDate').value='';
+  $('warrantyDays').value=appData.settings.defaultWarrantyDays||90;$('warrantyUntil').value='';$('paymentMethod').value='Nakit';
+  ['laborFee','partsFee','otherFee','paidAmount'].forEach(id=>$(id).value=0);calcMoney();
+}
+function newService(){clearServiceForm();go('serviceFormView')}
+function calcMoney(){let total=num('laborFee')+num('partsFee')+num('otherFee'),paid=Math.max(0,num('paidAmount'));$('totalPreview').textContent=money(total);$('balancePreview').textContent=money(Math.max(0,total-paid))}
+function editService(id){let r=appData.serviceRecords.find(x=>x.id==id);if(!r)return;clearServiceForm();$('recordId').value=r.id;$('formTitle').textContent='Servis Kaydını Düzenle';$('status').innerHTML=STATUSES.map(x=>`<option>${esc(x)}</option>`).join('');const map={customerName:'customerName',customerPhone:'customerPhone',customerEmail:'customerEmail',deviceType:'deviceType',deviceModel:'deviceModel',serialNo:'serialNo',accessories:'accessories',deviceCondition:'deviceCondition',complaint:'complaint',status:'status',priority:'priority',technician:'technician',estimatedDate:'estimatedDate',entryDate:'entryDate',exitDate:'exitDate',warrantyDays:'warrantyDays',warrantyUntil:'warrantyUntil',repairNotes:'repairNotes',internalNote:'internalNote',laborFee:'laborFee',partsFee:'partsFee',otherFee:'otherFee',paidAmount:'paidAmount',paymentMethod:'paymentMethod'};Object.entries(map).forEach(([k,id])=>{if($(id))$(id).value=r[k]??''});calcMoney();bootstrap.Modal.getInstance($('detailModal'))?.hide();go('serviceFormView')}
+async function saveService(e){
+  e.preventDefault();
+  let id=val('recordId'),old=id?appData.serviceRecords.find(x=>String(x.id)===id):null,total=num('laborFee')+num('partsFee')+num('otherFee'),paid=Math.max(0,num('paidAmount'));
+  if(paid>total+.01&&!confirm('Tahsil edilen tutar toplam servis tutarından yüksek. Yine de kaydedilsin mi?'))return;
+  let rec={id:old?.id||Date.now(),serviceNo:old?.serviceNo||nextServiceNo(),customerName:val('customerName'),customerPhone:val('customerPhone'),customerEmail:val('customerEmail'),deviceType:val('deviceType'),deviceModel:val('deviceModel'),serialNo:val('serialNo'),accessories:val('accessories'),deviceCondition:val('deviceCondition'),complaint:val('complaint'),status:val('status')||'Kayıt Alındı',priority:val('priority')||'Normal',technician:val('technician'),estimatedDate:val('estimatedDate'),entryDate:val('entryDate')||today(),exitDate:val('exitDate'),warrantyDays:num('warrantyDays'),warrantyUntil:val('warrantyUntil'),repairNotes:val('repairNotes'),internalNote:val('internalNote'),laborFee:num('laborFee'),partsFee:num('partsFee'),otherFee:num('otherFee'),totalFee:total,paidAmount:paid,paymentMethod:val('paymentMethod')||'Nakit',history:[...(old?.history||[])]};
+  if(rec.status==='Teslim Edildi'&&!rec.exitDate)rec.exitDate=today();
+  if(rec.exitDate&&rec.warrantyDays&&!rec.warrantyUntil)rec.warrantyUntil=addDays(rec.exitDate,rec.warrantyDays);
+  let changed=old?'Servis kaydı güncellendi':'Servis kaydı oluşturuldu';if(old&&old.status!==rec.status)changed+=` · Durum: ${old.status} → ${rec.status}`;
+  rec.history.push({date:new Date().toISOString(),text:changed});
+  if(old)appData.serviceRecords[appData.serviceRecords.indexOf(old)]=rec;else appData.serviceRecords.push(rec);
+  try{await save();await load();toast(old?'Servis kaydı güncellendi':'Yeni servis kaydı oluşturuldu');go('services')}catch(err){toast('Servis kaydı kaydedilemedi. Sunucu/veri dosyası kontrol edilmeli.','danger')}
+}
 function renderAll(){normalize();renderDashboard();renderServices();renderCustomers();renderInventory();renderCash();renderReports();applySettings()}
 function dashboardMatches(r,f){if(!f)return true;if(f==='active')return !isClosed(r);if(f==='waiting')return ['Müşteri Onayı Bekleniyor','Parça Bekleniyor'].includes(r.status);if(f==='ready')return String(r.status||'').includes('Hazır');if(f==='overdue')return isOverdue(r);if(f==='debt')return balance(r)>0;return true}
 function toggleDashboardFilter(f){dashboardFilter=dashboardFilter===f?'':f;renderDashboard();setTimeout(()=>document.querySelector('.dashboard-recent-table')?.closest('.panel')?.scrollIntoView({behavior:'smooth',block:'start'}),50)}

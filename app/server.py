@@ -48,29 +48,84 @@ def empty_db():
     }
 
 
+def _read_db_candidate(path):
+    try:
+        raw = json.loads(path.read_text(encoding='utf-8-sig'))
+        return raw if isinstance(raw, (dict, list)) else None
+    except Exception:
+        return None
+
+
+def _data_score(raw):
+    """Gerçek işletme verisini boş/seed DB'den ayırmak için kaba puan."""
+    if isinstance(raw, list):
+        return len(raw) * 100
+    if not isinstance(raw, dict):
+        return -1
+    return (
+        len(raw.get('serviceRecords') or []) * 100
+        + len(raw.get('cashRecords') or []) * 20
+        + len(raw.get('inventory') or []) * 10
+        + len(raw.get('users') or [])
+    )
+
+
+def _merge_users_if_needed(recovered, current):
+    if not isinstance(recovered, dict) or not isinstance(current, dict):
+        return recovered
+    if not recovered.get('users') and current.get('users'):
+        recovered = dict(recovered)
+        recovered['users'] = current['users']
+    return recovered
+
+
 def ensure_storage():
     USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not INDEX_FILE.exists():
         raise FileNotFoundError(f'Arayüz dosyası bulunamadı: {INDEX_FILE}')
-    if not DB_FILE.exists():
-        # v2.3.8 ve daha eski sürümlerde canlı db.json EXE'nin yanındaydı.
-        # İlk v2.3.8 açılışında onu sabit veri klasörüne otomatik taşı/kopyala.
-        candidates = []
-        if LEGACY_DB_FILE.exists(): candidates.append(LEGACY_DB_FILE)
-        if SEED_DB_FILE.exists() and SEED_DB_FILE not in candidates: candidates.append(SEED_DB_FILE)
-        copied = False
-        for candidate in candidates:
+
+    # Önce eski sürümdeki canlı DB ve olası eski yedekleri ara.
+    legacy_candidates = []
+    for candidate in (LEGACY_DB_FILE, APP_DIR / 'data' / 'db.json'):
+        if candidate.exists() and candidate.resolve() != DB_FILE.resolve():
+            legacy_candidates.append(candidate)
+    for folder in (APP_DIR / 'backups',):
+        if folder.exists():
+            legacy_candidates.extend(sorted(folder.glob('*.json'), key=lambda x: x.stat().st_mtime, reverse=True))
+
+    current_raw = _read_db_candidate(DB_FILE) if DB_FILE.exists() else None
+    current_score = _data_score(current_raw)
+
+    best_path = None
+    best_raw = None
+    best_score = current_score
+    for candidate in legacy_candidates:
+        raw = _read_db_candidate(candidate)
+        score = _data_score(raw)
+        if score > best_score:
+            best_path, best_raw, best_score = candidate, raw, score
+
+    # İlk hatalı 2.3.8 çalıştırmasında boş kalıcı DB oluşmuş olsa bile,
+    # eski klasörde daha zengin gerçek veri varsa onu otomatik kurtar.
+    if best_path is not None and best_raw is not None:
+        if DB_FILE.exists():
             try:
-                raw = json.loads(candidate.read_text(encoding='utf-8-sig'))
-                if isinstance(raw, (dict, list)):
-                    shutil.copy2(candidate, DB_FILE)
-                    copied = True
-                    break
-            except Exception:
-                continue
-        if not copied:
+                rescue = BACKUP_DIR / f'pre_recovery_{time.strftime("%Y-%m-%dT%H-%M-%S")}.json'
+                shutil.copy2(DB_FILE, rescue)
+            except OSError:
+                pass
+        best_raw = _merge_users_if_needed(best_raw, current_raw)
+        DB_FILE.write_text(json.dumps(best_raw, ensure_ascii=False, indent=2), encoding='utf-8')
+        current_raw = best_raw
+
+    if not DB_FILE.exists():
+        # Eski canlı DB yoksa paket içindeki seed yalnızca ilk kurulum için kullanılır.
+        seed = _read_db_candidate(SEED_DB_FILE) if SEED_DB_FILE.exists() else None
+        if seed is not None:
+            DB_FILE.write_text(json.dumps(seed, ensure_ascii=False, indent=2), encoding='utf-8')
+        else:
             DB_FILE.write_text(json.dumps(empty_db(), ensure_ascii=False, indent=2), encoding='utf-8')
 
 

@@ -10,17 +10,9 @@
 - Dashboard ve Kasa aynı `serviceRecords + cashRecords` verisini kullanmaya devam eder.
 - v2.3.4+ özellikleri korunur: Dashboard kart filtreleri, Seri No/IMEI araması, mobil barkod/QR kamera, A5 dikey çift nüsha servis fişi, kullanıcı/şifre/logo, stok/kasa/raporlar.
 - Güncellemede mevcut eski `db.json` installer tarafından ezilmez; migration için korunur.
+## v2.3.8 Hotfix 1
+- Yeni Servis Kaydı / düzenleme / kaydetme işlevleri geri eklendi ve doğrulandı.
+- İlk 2.3.8 çalıştırmasında boş kalıcı DB oluşmuşsa, daha zengin eski 2.3.7 DB otomatik kurtarılır.
+- Kurtarma öncesi mevcut kalıcı DB otomatik yedeklenir.
+- Eski DB kullanıcı içermiyorsa mevcut kullanıcı hesapları korunur.
 
-- 30/08/2026 tarihli kullanıcı servis/kasa yedeği `backups/` klasörüne eklendi; otomatik geri yükleme yapılmaz.
-
-## v2.3.8 Build Hotfix 1
-- Inno Setup artık `dist\TeknikServisPro\db.json` beklemiyor.
-- İlk kurulum seed verisi doğrudan `app\db.json` kaynağından alınır ve mevcut `db.json` asla ezilmez.
-- 30/08/2026 kasa yedeği kurulumda `%LOCALAPPDATA%\TeknikServisPro\Data\importable-backups` altına güvenli kopya olarak bırakılır.
-- Canlı veri ve yedek birbirinden ayrı tutulur.
-
-
-### Build Hotfix 2
-- Git tarafından yok sayılan `backups/` kaynağı kaldırıldı.
-- Kurulumla gelen referans yedek `app/bundled_backups/` altına taşındı.
-- Workflow ve Inno Setup aynı yeni yolu kullanıyor.
