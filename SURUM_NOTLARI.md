@@ -16,3 +16,9 @@
 - Kurtarma öncesi mevcut kalıcı DB otomatik yedeklenir.
 - Eski DB kullanıcı içermiyorsa mevcut kullanıcı hesapları korunur.
 
+## v2.3.8 Hotfix 2
+- Inno Setup artık `dist\TeknikServisPro\db.json` dosyasını kökte beklemiyor.
+- PyInstaller onedir yapısındaki `_internal\db.json` seed dosyası installer ile birlikte doğru şekilde paketleniyor.
+- Canlı kullanıcı verisi `%LOCALAPPDATA%\TeknikServisPro\Data\db.json` altında kalmaya devam ediyor ve installer tarafından ezilmiyor.
+- GitHub Actions, installer aşamasından önce PyInstaller çıktısında seed `db.json` bulunduğunu doğruluyor.
+

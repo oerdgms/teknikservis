@@ -28,9 +28,10 @@ RestartApplications=no
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
-; Uygulama dosyalarını güncelle, ancak canlı veritabanını ASLA ezme.
-Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Excludes: "db.json"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "dist\TeknikServisPro\db.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
+; v2.3.8: Canlı veritabanı kurulum klasöründe değildir.
+; PyInstaller onedir çıktısının tamamını (_internal içindeki seed db.json dahil) kopyala.
+; Kullanıcı verisi %LOCALAPPDATA%\TeknikServisPro\Data altında korunur.
+Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
 
 [Icons]
 Name: "{autodesktop}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; WorkingDir: "{app}"

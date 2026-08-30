@@ -57,6 +57,11 @@ jobs:
           if (!(Test-Path "dist\TeknikServisPro\TeknikServisPro.exe")) {
             throw "TeknikServisPro.exe oluşturulamadı."
           }
+          $seedDb = Get-ChildItem "dist\TeknikServisPro" -Recurse -Filter "db.json" | Select-Object -First 1
+          if (-not $seedDb) {
+            throw "PyInstaller çıktısında seed db.json bulunamadı."
+          }
+          Write-Host "Seed DB: $($seedDb.FullName)"
 
       - name: Uygulamayı çalıştır ve health test et
         shell: pwsh
