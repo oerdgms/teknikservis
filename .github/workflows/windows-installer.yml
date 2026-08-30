@@ -6,11 +6,9 @@ on:
     branches: [ main ]
     paths:
       - "index.html"
-      - "server.js"
-      - "package.json"
-      - "package-lock.json"
-      - "launcher.ps1"
-      - "Launcher.cs"
+      - "server.py"
+      - "requirements.txt"
+      - "db.json"
       - "assets/**"
       - "installer/**"
       - ".github/workflows/windows-installer.yml"
@@ -21,38 +19,37 @@ permissions:
 jobs:
   build-windows-installer:
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
 
     steps:
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
-      - name: Node.js 20 kur
-        uses: actions/setup-node@v4
+      - name: Python 3.12 kur
+        uses: actions/setup-python@v5
         with:
-          node-version: "20"
-          cache: npm
+          python-version: "3.12"
 
-      - name: Bağımlılıkları kur
-        run: npm ci --omit=dev
+      - name: PyInstaller kur
+        shell: powershell
+        run: python -m pip install --upgrade pip pyinstaller
 
-      - name: Windows launcher EXE oluştur
+      - name: TeknikServisPro.exe oluştur
         shell: powershell
         run: |
-          $csc = "$env:WINDIR\Microsoft.NET\Framework64\v4.0.30319\csc.exe"
-          if (!(Test-Path $csc)) { throw "C# derleyicisi bulunamadı: $csc" }
-          & $csc /nologo /target:winexe /optimize+ /reference:System.Windows.Forms.dll /win32icon:assets\TeknikServisPro.ico /out:TeknikServisPro.exe Launcher.cs
-          if (!(Test-Path "TeknikServisPro.exe")) { throw "Launcher EXE oluşturulamadı." }
+          python -m PyInstaller --noconfirm --clean --onefile --noconsole `
+            --name TeknikServisPro `
+            --icon assets\TeknikServisPro.ico `
+            server.py
+          if (!(Test-Path "dist\TeknikServisPro.exe")) { throw "TeknikServisPro.exe oluşturulamadı." }
 
-      - name: Dağıtım klasörünü hazırla
+      - name: Dağıtım dosyalarını hazırla
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force dist\runtime | Out-Null
           New-Item -ItemType Directory -Force dist\assets | Out-Null
-          Copy-Item index.html,server.js,db.json,package.json,package-lock.json,launcher.ps1,TeknikServisPro.exe -Destination dist
-          Copy-Item assets\TeknikServisPro.ico -Destination dist\assets\TeknikServisPro.ico
-          Copy-Item node_modules -Destination dist -Recurse
-          Copy-Item (Get-Command node).Source -Destination dist\runtime\node.exe
+          Copy-Item index.html -Destination dist\index.html -Force
+          Copy-Item db.json -Destination dist\db.json -Force
+          Copy-Item assets\TeknikServisPro.ico -Destination dist\assets\TeknikServisPro.ico -Force
 
       - name: Inno Setup kur
         shell: powershell
@@ -62,12 +59,12 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_2_2_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+          if (!(Test-Path "release\TeknikServisPro_v2_3_0_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
 
       - name: Kurulum dosyasını artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.2.2-Windows-Setup
-          path: release/TeknikServisPro_v2_2_2_Setup.exe
+          name: TeknikServisPro-v2.3.0-Python-Windows-Setup
+          path: release/TeknikServisPro_v2_3_0_Setup.exe
           if-no-files-found: error
           retention-days: 30

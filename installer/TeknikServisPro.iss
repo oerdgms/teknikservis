@@ -1,5 +1,5 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.2.2"
+#define MyAppVersion "2.3.0"
 #define MyAppPublisher "Teknik Servis Pro"
 #define MyAppExeName "TeknikServisPro.exe"
 
@@ -13,7 +13,7 @@ DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputDir=..\release
-OutputBaseFilename=TeknikServisPro_v2_2_2_Setup
+OutputBaseFilename=TeknikServisPro_v2_3_0_Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern

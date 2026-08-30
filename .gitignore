@@ -1,5 +1,8 @@
-node_modules/
+__pycache__/
+*.pyc
+build/
+dist/
+release/
+logs/
 backups/
-*.log
-.DS_Store
-Thumbs.db
+*.spec

@@ -51,3 +51,16 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - Masaüstü ve Başlat menüsü kısayollarına Teknik Servis Pro logosu eklendi.
 - Aynı logo Windows kurulum sihirbazı ve kaldırma kaydında kullanılır.
 - GitHub Actions launcher EXE'yi otomatik derleyip Inno Setup kurulumunu üretir.
+
+## v2.3.0 - Python Edition
+
+- Node.js, `node_modules`, npm ve eski launcher zinciri tamamen kaldırıldı.
+- Backend Python standart kütüphanesiyle yeniden yazıldı.
+- Tek `TeknikServisPro.exe` yerel sunucuyu başlatır ve tarayıcıyı otomatik açar.
+- Port 8972 korunur; aynı uygulama zaten çalışıyorsa yeni sunucu açmak yerine mevcut sayfa açılır.
+- v2.2 scrypt kullanıcı şifreleriyle geriye uyumluluk korunur.
+- Mevcut servis, kasa ve kullanıcı verileri `db.json` üzerinden korunur.
+- GitHub Actions artık Python 3.12 + PyInstaller + Inno Setup kullanır.
+- Hedef bilgisayarda Python veya Node.js kurulumu gerekmez.
+- Masaüstü/Başlat menüsü kısayol logosu korunur.
+- A5 dikey iki nüsha servis fişi korunur.
