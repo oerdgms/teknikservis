@@ -1,5 +1,5 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.3.6"
+#define MyAppVersion "2.3.7"
 #define MyAppPublisher "Teknik Servis Pro"
 #define MyAppExeName "TeknikServisPro.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\TeknikServisPro
 DefaultGroupName={#MyAppName}
 OutputDir=release
-OutputBaseFilename=TeknikServisPro_v2_3_6_Setup
+OutputBaseFilename=TeknikServisPro_v2_3_7_Setup
 SetupIconFile=app\assets\TeknikServisPro.ico
 UninstallDisplayIcon={app}\TeknikServisPro.exe
 PrivilegesRequired=lowest
@@ -28,7 +28,9 @@ RestartApplications=no
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
-Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+; Uygulama dosyalarını güncelle, ancak canlı veritabanını ASLA ezme.
+Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Excludes: "db.json"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "dist\TeknikServisPro\db.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Icons]
 Name: "{autodesktop}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; WorkingDir: "{app}"
@@ -36,3 +38,46 @@ Name: "{userprograms}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe";
 
 [Run]
 Filename: "{app}\TeknikServisPro.exe"; Description: "Teknik Servis Pro'yu başlat"; Flags: nowait postinstall skipifsilent
+
+[Code]
+function IsPortOpen: Boolean;
+var
+  ResultCode: Integer;
+  PS: String;
+begin
+  { Yalnızca localhost health endpoint'ini kontrol eder. }
+  PS := '-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "try { $r=Invoke-WebRequest -UseBasicParsing -TimeoutSec 1 http://127.0.0.1:8972/api/health; if($r.StatusCode -eq 200){exit 0}else{exit 1} } catch { exit 1 }"';
+  Result := Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), PS, '', SW_HIDE, ewWaitUntilTerminated, ResultCode) and (ResultCode = 0);
+end;
+
+procedure RequestGracefulShutdown;
+var
+  ResultCode: Integer;
+  PS: String;
+begin
+  { taskkill yok: çalışan uygulamanın kendi localhost shutdown API'sine kontrollü istek. }
+  PS := '-NoProfile -NonInteractive -ExecutionPolicy Bypass -Command "try { Invoke-WebRequest -UseBasicParsing -Method POST -ContentType ''application/json'' -Body ''{}'' -TimeoutSec 2 http://127.0.0.1:8972/api/shutdown | Out-Null } catch {}"';
+  Exec(ExpandConstant('{sys}\WindowsPowerShell\v1.0\powershell.exe'), PS, '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+end;
+
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  I: Integer;
+begin
+  Result := '';
+  if IsPortOpen then
+  begin
+    WizardForm.StatusLabel.Caption := 'Çalışan Teknik Servis Pro güvenli şekilde kapatılıyor...';
+    RequestGracefulShutdown;
+    for I := 1 to 24 do
+    begin
+      Sleep(500);
+      if not IsPortOpen then
+      begin
+        Result := '';
+        exit;
+      end;
+    end;
+    Result := 'Teknik Servis Pro halen çalışıyor. Programı ve açık Teknik Servis Pro pencerelerini kapatıp kurulumu yeniden başlatın. Verileriniz korunmuştur.';
+  end;
+end;

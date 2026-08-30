@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.6'
+APP_VERSION = '2.3.7'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -27,7 +27,7 @@ SESSION_TTL = 12 * 60 * 60
 
 def empty_db():
     return {
-        'version': 2.35,
+        'version': 2.37,
         'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -71,7 +71,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.35
+    normalized['version'] = 2.37
     temp = DB_FILE.with_suffix('.json.tmp')
     temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
     os.replace(temp, DB_FILE)
@@ -140,7 +140,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.6'
+    server_version = 'TeknikServisPro/2.3.7'
 
     def log_message(self, fmt, *args):
         try:
@@ -306,8 +306,12 @@ def main():
         webbrowser.open(f'http://127.0.0.1:{PORT}', new=1); return
     try:
         server=ThreadingHTTPServer((HOST, PORT), Handler)
+        server.daemon_threads = True
         threading.Thread(target=open_browser_later, daemon=True).start()
-        server.serve_forever()
+        try:
+            server.serve_forever()
+        finally:
+            server.server_close()
     except Exception as e:
         log_exception(e)
         # pythonw ile çalışırken de kullanıcıya anlaşılır mesaj ver.

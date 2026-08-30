@@ -5,7 +5,7 @@ project_root = Path(SPECPATH)
 app_root = project_root / "app"
 
 a = Analysis(
-    [str(app_root / "server.py")],
+    [str(app_root / "desktop_launcher.py")],
     pathex=[str(app_root)],
     binaries=[],
     datas=[
@@ -35,7 +35,6 @@ exe = EXE(
     upx=False,
     console=False,
     icon=str(app_root / "assets" / "TeknikServisPro.ico"),
-    version=str(project_root / "version_info.txt"),
 )
 
 coll = COLLECT(
