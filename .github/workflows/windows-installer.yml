@@ -38,7 +38,8 @@ jobs:
             "app\desktop_launcher.py",
             "app\index.html",
             "app\db.json",
-            "app\assets\TeknikServisPro.ico"
+            "app\assets\TeknikServisPro.ico",
+            "backups\teknik_servis_kasa_yedek_2026-08-30.json"
           )
           foreach ($file in $required) {
             if (!(Test-Path $file)) { throw "Gerekli kaynak dosya bulunamadı: $file" }

@@ -12,3 +12,9 @@
 - Güncellemede mevcut eski `db.json` installer tarafından ezilmez; migration için korunur.
 
 - 30/08/2026 tarihli kullanıcı servis/kasa yedeği `backups/` klasörüne eklendi; otomatik geri yükleme yapılmaz.
+
+## v2.3.8 Build Hotfix 1
+- Inno Setup artık `dist\TeknikServisPro\db.json` beklemiyor.
+- İlk kurulum seed verisi doğrudan `app\db.json` kaynağından alınır ve mevcut `db.json` asla ezilmez.
+- 30/08/2026 kasa yedeği kurulumda `%LOCALAPPDATA%\TeknikServisPro\Data\importable-backups` altına güvenli kopya olarak bırakılır.
+- Canlı veri ve yedek birbirinden ayrı tutulur.

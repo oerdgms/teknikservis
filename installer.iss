@@ -30,7 +30,9 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 [Files]
 ; Uygulama dosyalarını güncelle, ancak canlı veritabanını ASLA ezme.
 Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Excludes: "db.json"; Flags: ignoreversion recursesubdirs createallsubdirs
-Source: "dist\TeknikServisPro\db.json"; DestDir: "{app}"; Flags: onlyifdoesntexist uninsneveruninstall
+Source: "app\db.json"; DestDir: "{app}"; DestName: "db.json"; Flags: onlyifdoesntexist uninsneveruninstall
+; Kullanıcının sağladığı yedek canlı verinin üzerine yazılmaz; gerektiğinde geri yüklemek için saklanır.
+Source: "backups\teknik_servis_kasa_yedek_2026-08-30.json"; DestDir: "{localappdata}\TeknikServisPro\Data\importable-backups"; Flags: onlyifdoesntexist uninsneveruninstall
 
 [Icons]
 Name: "{autodesktop}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; WorkingDir: "{app}"
