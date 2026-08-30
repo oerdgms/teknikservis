@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.5'
+APP_VERSION = '2.3.6'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -140,7 +140,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.5'
+    server_version = 'TeknikServisPro/2.3.6'
 
     def log_message(self, fmt, *args):
         try:

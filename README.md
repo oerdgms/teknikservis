@@ -1,23 +1,10 @@
-# Teknik Servis Pro v2.3.5
+# Teknik Servis Pro v2.3.6
 
-Bu sürüm, v2.3.4 işlevlerini korur ve Windows paketleme zincirini ÇiftlikPro'da kullanılan sade yapıya taşır.
+GitHub'a ZIP içeriğini repository köküne yükleyin.
 
-## Korunan özellikler
-- Dashboard kart filtreleri
-- Seri No / IMEI ile arama
-- Mobil kamera ile barkod / QR okuma
-- Mobil hamburger kartları ve mobil servis kartları
-- Kullanıcı, şifre, işletme ve logo ayarları
-- A5 dikey tek sayfada 2 kopya servis fişi
-- Servis, kasa, stok, rapor ve yedekleme
-- Python backend ve 8972 portu
+Actions > Teknik Servis Pro - Windows Kurulum > Run workflow
 
-## Windows build
-- Python 3.12
-- PyInstaller 6.11.1
-- onedir / COLLECT
-- UPX kapalı
-- sade Inno Setup
-- GitHub Actions health testi
+Beklenen artifact: TeknikServisPro-v2.3.6-Windows-Setup
+Beklenen kurulum: TeknikServisPro_v2_3_6_Setup.exe
 
-GitHub Actions > Teknik Servis Pro - Windows Kurulum > Run workflow.
+Bu sürüm v2.3.4/2.3.5 işlevlerini korur; Windows build giriş noktası doğrudan app/server.py olacak şekilde sadeleştirilmiştir.
