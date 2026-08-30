@@ -1,3 +1,12 @@
+# Teknik Servis Pro v2.3.8 Hotfix4
+
+- İlk açılışta Dashboard'un boş görünmesine neden olan eksik `populateStatuses()` fonksiyonu eklendi.
+- Başlangıç sırası düzeltildi: oturum kontrolü → `/api/data` yükleme → normalize/render → Dashboard.
+- İlk veri yükleme hatasında tek seferlik tekrar deneme ve konsol tanılama eklendi.
+- `/api/auth/status` isteğine `cache: no-store` eklendi.
+- Hotfix3 kalıcı yedek geri yükleme ve veri klasörü yapısı korunur.
+- Başlangıç testinde tespit edilen eksik `renderServices()` ve `deleteService()` fonksiyonları da geri getirildi; Servis Kayıtları ekranı ve silme işlemi tekrar aktif.
+
 # Teknik Servis Pro v2.3.8 Hotfix3
 
 - Yedek geri yükleme artık backend üzerinden doğrudan kalıcı Data\db.json dosyasına yazılır.

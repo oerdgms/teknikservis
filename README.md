@@ -1,5 +1,7 @@
 # Teknik Servis Pro v2.3.8
 
+**Hotfix4:** İlk açılışta Dashboard verileri API'den yüklenmeden önce boş görünme sorunu giderildi.
+
 Python tabanlı yerel teknik servis yönetim uygulaması.
 
 ## Veri güvenliği
