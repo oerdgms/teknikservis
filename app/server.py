@@ -4,11 +4,11 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.7'
+APP_VERSION = '2.3.8'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
-# Kaynak ve kullanıcı verileri uygulama klasöründe tutulur.
+# Program dosyaları ile canlı işletme verisini birbirinden ayır.
 if getattr(sys, 'frozen', False):
     APP_DIR = Path(sys.executable).resolve().parent
     RESOURCE_DIR = Path(getattr(sys, '_MEIPASS', APP_DIR))
@@ -16,18 +16,28 @@ else:
     APP_DIR = Path(__file__).resolve().parent
     RESOURCE_DIR = APP_DIR
 
-DB_FILE = APP_DIR / 'db.json'
-BACKUP_DIR = APP_DIR / 'backups'
-LOG_DIR = APP_DIR / 'logs'
+# Windows'ta tüm sürümler aynı sabit kullanıcı veri klasörünü kullanır.
+# Böylece kurulum/güncelleme EXE dosyalarını değiştirse bile servis, kasa, kullanıcı ve ayarlar korunur.
+_local_appdata = os.environ.get('LOCALAPPDATA')
+if _local_appdata:
+    USER_DATA_DIR = Path(_local_appdata) / 'TeknikServisPro' / 'Data'
+else:
+    USER_DATA_DIR = Path.home() / '.teknikservispro' / 'data'
+
+DB_FILE = USER_DATA_DIR / 'db.json'
+BACKUP_DIR = USER_DATA_DIR / 'backups'
+LOG_DIR = USER_DATA_DIR / 'logs'
 STATIC_DIR = RESOURCE_DIR if getattr(sys, 'frozen', False) else APP_DIR
 INDEX_FILE = STATIC_DIR / 'index.html'
+LEGACY_DB_FILE = APP_DIR / 'db.json'
+SEED_DB_FILE = RESOURCE_DIR / 'db.json'
 SESSIONS = {}
 SESSION_TTL = 12 * 60 * 60
 
 
 def empty_db():
     return {
-        'version': 2.37,
+        'version': 2.38,
         'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -39,14 +49,29 @@ def empty_db():
 
 
 def ensure_storage():
+    USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not INDEX_FILE.exists():
         raise FileNotFoundError(f'Arayüz dosyası bulunamadı: {INDEX_FILE}')
     if not DB_FILE.exists():
-        candidate = RESOURCE_DIR / 'db.json'
-        if candidate.exists(): shutil.copy2(candidate, DB_FILE)
-        else: DB_FILE.write_text(json.dumps(empty_db(), ensure_ascii=False, indent=2), encoding='utf-8')
+        # v2.3.8 ve daha eski sürümlerde canlı db.json EXE'nin yanındaydı.
+        # İlk v2.3.8 açılışında onu sabit veri klasörüne otomatik taşı/kopyala.
+        candidates = []
+        if LEGACY_DB_FILE.exists(): candidates.append(LEGACY_DB_FILE)
+        if SEED_DB_FILE.exists() and SEED_DB_FILE not in candidates: candidates.append(SEED_DB_FILE)
+        copied = False
+        for candidate in candidates:
+            try:
+                raw = json.loads(candidate.read_text(encoding='utf-8-sig'))
+                if isinstance(raw, (dict, list)):
+                    shutil.copy2(candidate, DB_FILE)
+                    copied = True
+                    break
+            except Exception:
+                continue
+        if not copied:
+            DB_FILE.write_text(json.dumps(empty_db(), ensure_ascii=False, indent=2), encoding='utf-8')
 
 
 def normalize_db(raw):
@@ -71,7 +96,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.37
+    normalized['version'] = 2.38
     temp = DB_FILE.with_suffix('.json.tmp')
     temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
     os.replace(temp, DB_FILE)
@@ -140,13 +165,20 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.7'
+    server_version = 'TeknikServisPro/2.3.8'
 
     def log_message(self, fmt, *args):
         try:
             with (LOG_DIR / 'access.log').open('a', encoding='utf-8') as f:
                 f.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} {self.address_string()} {fmt % args}\n")
         except Exception: pass
+
+    def end_headers(self):
+        # Mobil tarayıcı/Tailscale erişiminde eski HTML/JS önbellekten gelmesin.
+        self.send_header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+        self.send_header('Pragma', 'no-cache')
+        self.send_header('Expires', '0')
+        super().end_headers()
 
     def translate_path(self, path):
         # Statik dosyaları yalnızca paketlenmiş arayüz klasöründen sun.
@@ -183,6 +215,16 @@ class Handler(SimpleHTTPRequestHandler):
         p = urlparse(self.path).path
         try:
             if p == '/api/health': return self.send_json({'ok': True, 'version': APP_VERSION, 'runtime': 'python'})
+            if p == '/api/diagnostics':
+                if not self.auth(): return
+                db = read_db()
+                return self.send_json({
+                    'ok': True, 'version': APP_VERSION,
+                    'dataFile': str(DB_FILE),
+                    'serviceCount': len(db.get('serviceRecords', [])),
+                    'cashCount': len(db.get('cashRecords', [])),
+                    'inventoryCount': len(db.get('inventory', []))
+                })
             if p == '/api/auth/status':
                 db = read_db(); u = session_user(self.headers)
                 return self.send_json({'setupRequired': len(db['users']) == 0, 'authenticated': bool(u), 'user': u})

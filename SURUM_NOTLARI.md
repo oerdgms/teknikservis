@@ -1,16 +1,14 @@
-# Teknik Servis Pro v2.3.7
+# Teknik Servis Pro v2.3.8
 
-- v2.3.4 özelliklerinin tamamı korunmuştur.
-- Windows build yapısı ÇiftlikPro referansındaki PyInstaller onedir + COLLECT yapısına geçirildi.
-- PyInstaller UPX kapalıdır.
-- Repo kökünde TeknikServisPro.spec ve installer.iss bulunur.
-- Uygulama kaynakları app/ altında tutulur.
-- GitHub Actions, installer üretmeden önce gerçek /api/health testi yapar.
-- Kurulum dosyası: TeknikServisPro_v2_3_7_Setup.exe
+- Canlı veritabanı program/EXE klasöründen ayrıldı.
+- Windows veri yolu: `%LOCALAPPDATA%\\TeknikServisPro\\Data\\db.json`.
+- v2.3.7 ve önceki kurulumdaki `db.json`, ilk v2.3.8 açılışında otomatik olarak yeni kalıcı veri klasörüne taşınır/kopyalanır.
+- Yedekler ve loglar da kalıcı veri klasörüne alındı.
+- HTML/API yanıtlarında `Cache-Control: no-store` etkin; mobilde eski önbellek kaynaklı boş/eski ekran riski azaltıldı.
+- Dashboard, Servis Kayıtları, Müşteriler, Stok, Kasa ve Raporlar ekranlarına geçişte veri sunucudan yeniden okunur.
+- `/api/diagnostics` ile kullanılan fiziksel DB yolu ve kayıt sayıları doğrulanabilir.
+- Dashboard ve Kasa aynı `serviceRecords + cashRecords` verisini kullanmaya devam eder.
+- v2.3.4+ özellikleri korunur: Dashboard kart filtreleri, Seri No/IMEI araması, mobil barkod/QR kamera, A5 dikey çift nüsha servis fişi, kullanıcı/şifre/logo, stok/kasa/raporlar.
+- Güncellemede mevcut eski `db.json` installer tarafından ezilmez; migration için korunur.
 
-## v2.3.7 - Çalışan EXE Kilidi Hotfix
-- Güncelleme öncesi çalışan Teknik Servis Pro, localhost `/api/shutdown` ile kontrollü kapatılır.
-- `taskkill` kullanılmaz; kapanma başarısızsa kurulum dosya kopyalamadan önce durur ve kullanıcıyı uyarır.
-- Sunucu kapanışında HTTP socket kapatılır ve request thread'leri daemon çalışır; prosesin gerçekten sonlanması sağlanır.
-- Mevcut `db.json` güncelleme kurulumunda asla üzerine yazılmaz; yalnızca ilk kurulumda örnek veritabanı oluşturulur.
-- v2.3.4/2.3.7 özellikleri korunur: dashboard kart filtreleri, Seri No/IMEI araması, mobil kamera/barkod, mobil UX, A5 çift nüsha fiş, kullanıcı/ayarlar, kasa/stok/raporlar.
+- 30/08/2026 tarihli kullanıcı servis/kasa yedeği `backups/` klasörüne eklendi; otomatik geri yükleme yapılmaz.
