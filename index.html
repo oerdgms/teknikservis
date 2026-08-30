@@ -30,7 +30,7 @@ html,body{width:148mm;height:210mm;margin:0!important;padding:0!important;backgr
 <body>
 <div class="app-shell">
 <aside class="sidebar" id="sidebar">
-  <a class="brand" href="#" onclick="go('dashboard')"><span class="brand-icon" id="brandIcon"><i class="fa-solid fa-screwdriver-wrench"></i></span><img id="brandLogo" class="brand-logo-img d-none" alt="Logo"><span><strong id="brandName">Sistem Bilgisayar</strong><small>Teknik Servis Pro v2.3.3</small></span></a>
+  <a class="brand" href="#" onclick="go('dashboard')"><span class="brand-icon" id="brandIcon"><i class="fa-solid fa-screwdriver-wrench"></i></span><img id="brandLogo" class="brand-logo-img d-none" alt="Logo"><span><strong id="brandName">Sistem Bilgisayar</strong><small>Teknik Servis Pro v2.3.4</small></span></a>
   <button class="nav-btn active" data-view="dashboard" onclick="go('dashboard')"><i class="fa-solid fa-chart-pie"></i> Dashboard</button>
   <button class="nav-btn" data-view="services" onclick="go('services')"><i class="fa-solid fa-ticket"></i> Servis Kayıtları</button>
   <button class="nav-btn" data-view="serviceFormView" onclick="newService()"><i class="fa-solid fa-circle-plus"></i> Yeni Servis Kaydı</button>
@@ -168,7 +168,7 @@ html,body{width:148mm;height:210mm;margin:0!important;padding:0!important;backgr
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
 const STATUSES=['Kayıt Alındı','Arıza Tespit','Müşteri Onayı Bekleniyor','Parça Bekleniyor','İşlemde','Test / Kalite Kontrol','Hazır (Müşteri Bekleniyor)','Teslim Edildi','İptal / İade'];
-let appData={version:2.33,serviceRecords:[],cashRecords:[],inventory:[],settings:{businessName:'Sistem Bilgisayar Teknik Destek',businessSubtitle:'Bilgisayar & Donanım Onarım Servisi',phone:'',email:'',address:'',taxOffice:'',taxNo:'',defaultWarrantyDays:90,logo:''}};let currentUser=null;let pendingLogo='';
+let appData={version:2.34,serviceRecords:[],cashRecords:[],inventory:[],settings:{businessName:'Sistem Bilgisayar Teknik Destek',businessSubtitle:'Bilgisayar & Donanım Onarım Servisi',phone:'',email:'',address:'',taxOffice:'',taxNo:'',defaultWarrantyDays:90,logo:''}};let currentUser=null;let pendingLogo='';
 let dashboardFilter='';let scannerStream=null;let scannerTimer=null;
 const $=id=>document.getElementById(id); const val=id=>($(id)?.value??'').trim(); const num=id=>Number($(id)?.value||0); const today=()=>new Date().toISOString().slice(0,10); const money=n=>(Number(n)||0).toLocaleString('tr-TR',{minimumFractionDigits:0,maximumFractionDigits:2})+' ₺';
 const esc=s=>String(s??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));

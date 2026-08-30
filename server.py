@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.3'
+APP_VERSION = '2.3.4'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -19,14 +19,15 @@ else:
 DB_FILE = APP_DIR / 'db.json'
 BACKUP_DIR = APP_DIR / 'backups'
 LOG_DIR = APP_DIR / 'logs'
-INDEX_FILE = APP_DIR / 'index.html'
+STATIC_DIR = RESOURCE_DIR if getattr(sys, 'frozen', False) else APP_DIR
+INDEX_FILE = STATIC_DIR / 'index.html'
 SESSIONS = {}
 SESSION_TTL = 12 * 60 * 60
 
 
 def empty_db():
     return {
-        'version': 2.33,
+        'version': 2.34,
         'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -41,8 +42,7 @@ def ensure_storage():
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not INDEX_FILE.exists():
-        candidate = RESOURCE_DIR / 'index.html'
-        if candidate.exists(): shutil.copy2(candidate, INDEX_FILE)
+        raise FileNotFoundError(f'Arayüz dosyası bulunamadı: {INDEX_FILE}')
     if not DB_FILE.exists():
         candidate = RESOURCE_DIR / 'db.json'
         if candidate.exists(): shutil.copy2(candidate, DB_FILE)
@@ -71,7 +71,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.33
+    normalized['version'] = 2.34
     temp = DB_FILE.with_suffix('.json.tmp')
     temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
     os.replace(temp, DB_FILE)
@@ -140,7 +140,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.3'
+    server_version = 'TeknikServisPro/2.3.4'
 
     def log_message(self, fmt, *args):
         try:
@@ -149,11 +149,11 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception: pass
 
     def translate_path(self, path):
-        # Static dosyaları yalnızca uygulama klasöründen sun.
+        # Statik dosyaları yalnızca paketlenmiş arayüz klasöründen sun.
         path = urlparse(path).path.lstrip('/') or 'index.html'
-        target = (APP_DIR / path).resolve()
-        try: target.relative_to(APP_DIR.resolve())
-        except ValueError: return str(APP_DIR / '__forbidden__')
+        target = (STATIC_DIR / path).resolve()
+        try: target.relative_to(STATIC_DIR.resolve())
+        except ValueError: return str(STATIC_DIR / '__forbidden__')
         return str(target)
 
     def send_json(self, obj, status=200, headers=None):

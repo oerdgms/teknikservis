@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.3.3
+# Teknik Servis Pro v2.3.4
 
 - Mobil hamburger menü öğeleri tam kart yüzeyinden tıklanabilir hale getirildi ve seçim sonrası menü otomatik kapanır.
 - Mobil üst bar butonları küçültüldü; başlık için daha fazla alan açıldı.
@@ -81,3 +81,12 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - Eski v2.3.0 `TeknikServisPro.exe` süreci yükseltmede kapatılıyor.
 - Eski Node/VBS/launcher dosyaları kurulum sırasında temizleniyor.
 - `db.json` güncellemelerde korunuyor.
+
+## v2.3.4 — ÇiftlikPro Tipi Windows Build Hotfix
+- Windows dağıtımı ÇiftlikPro'nun çalışan referans mimarisine geçirildi.
+- Python 3.12 + PyInstaller 6.11.1 onedir + UPX kapalı.
+- Embedded Python runtime ve pythonw.exe kısayolu kaldırıldı.
+- Kurulum sade Inno Setup akışına döndürüldü; özel process-kapatma kodu yok.
+- GitHub Actions EXE'yi kurulumdan önce `/api/health` ile test ediyor.
+- SHA-256 dosyası artifact içine ekleniyor.
+- Kullanıcı `db.json`, backups ve logs uygulama klasöründe korunur; paketlenmiş arayüz sürüm güncellemelerinde yenilenir.
