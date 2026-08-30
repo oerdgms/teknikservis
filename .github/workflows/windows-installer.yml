@@ -4,14 +4,6 @@ on:
   workflow_dispatch:
   push:
     branches: [ main ]
-    paths:
-      - "index.html"
-      - "server.py"
-      - "desktop_launcher.py"
-      - "db.json"
-      - "assets/**"
-      - "installer/**"
-      - ".github/workflows/windows-installer.yml"
 
 permissions:
   contents: read
@@ -30,48 +22,38 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Derleme aracını kur
+      - name: Derleme araçlarını kur
         shell: pwsh
         run: |
           python -m pip install --upgrade pip
           python -m pip install pyinstaller==6.11.1
 
-      - name: Python kaynak kontrolü
-        shell: pwsh
-        run: |
-          python -m py_compile server.py
-          python -m py_compile desktop_launcher.py
-
       - name: Kaynak dosyalarını doğrula
         shell: pwsh
         run: |
           $required = @(
-            "server.py",
-            "desktop_launcher.py",
-            "index.html",
-            "db.json",
-            "assets\TeknikServisPro.ico",
-            "installer\TeknikServisPro.iss"
+            "TeknikServisPro.spec",
+            "installer.iss",
+            "app\server.py",
+            "app\desktop_launcher.py",
+            "app\index.html",
+            "app\db.json",
+            "app\assets\TeknikServisPro.ico"
           )
           foreach ($file in $required) {
             if (!(Test-Path $file)) { throw "Gerekli kaynak dosya bulunamadı: $file" }
           }
 
+      - name: Python kaynak kontrolü
+        shell: pwsh
+        run: |
+          python -m py_compile app/server.py
+          python -m py_compile app/desktop_launcher.py
+
       - name: Windows uygulamasını oluştur
         shell: pwsh
         run: |
-          python -m PyInstaller `
-            --noconfirm `
-            --clean `
-            --onedir `
-            --windowed `
-            --name TeknikServisPro `
-            --icon "assets\TeknikServisPro.ico" `
-            --add-data "index.html;." `
-            --add-data "db.json;." `
-            --add-data "assets\TeknikServisPro.ico;assets" `
-            "desktop_launcher.py"
-
+          pyinstaller --noconfirm --clean TeknikServisPro.spec
           if (!(Test-Path "dist\TeknikServisPro\TeknikServisPro.exe")) {
             throw "TeknikServisPro.exe oluşturulamadı."
           }
@@ -79,14 +61,18 @@ jobs:
       - name: Uygulamayı çalıştır ve health test et
         shell: pwsh
         run: |
-          $process = Start-Process -FilePath "$pwd\dist\TeknikServisPro\TeknikServisPro.exe" -PassThru
+          $process = Start-Process `
+            -FilePath "$pwd\dist\TeknikServisPro\TeknikServisPro.exe" `
+            -PassThru
           try {
             $ready = $false
             for ($i = 0; $i -lt 80; $i++) {
               Start-Sleep -Milliseconds 500
               try {
-                $response = Invoke-RestMethod -Uri "http://127.0.0.1:8972/api/health" -TimeoutSec 2
-                if ($response.ok -eq $true -and $response.version -eq "2.3.4") {
+                $response = Invoke-RestMethod `
+                  -Uri "http://127.0.0.1:8972/api/health" `
+                  -TimeoutSec 2
+                if ($response.ok -eq $true -and $response.version -eq "2.3.5") {
                   $ready = $true
                   break
                 }
@@ -106,23 +92,24 @@ jobs:
           if (!(Test-Path $iscc)) {
             choco install innosetup --yes --no-progress
           }
-          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_3_4_Setup.exe")) {
-            throw "Kurulum EXE dosyası oluşturulamadı."
+          & "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" installer.iss
+          if (!(Test-Path "release\TeknikServisPro_v2_3_5_Setup.exe")) {
+            throw "TeknikServisPro_v2_3_5_Setup.exe oluşturulamadı."
           }
 
       - name: SHA-256 oluştur
         shell: pwsh
         run: |
-          $hash = (Get-FileHash "release\TeknikServisPro_v2_3_4_Setup.exe" -Algorithm SHA256).Hash
-          "TeknikServisPro_v2_3_4_Setup.exe  SHA256: $hash" | Out-File "release\SHA256.txt" -Encoding utf8
+          $hash = (Get-FileHash "release\TeknikServisPro_v2_3_5_Setup.exe" -Algorithm SHA256).Hash
+          "TeknikServisPro_v2_3_5_Setup.exe  SHA256: $hash" | Out-File `
+            "release\SHA256.txt" -Encoding utf8
 
-      - name: Kurulum dosyasını artifact olarak yükle
+      - name: Kurulum dosyasını yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.3.4-Windows-Setup
+          name: TeknikServisPro-v2.3.5-Windows-Setup
           path: |
-            release/TeknikServisPro_v2_3_4_Setup.exe
+            release/TeknikServisPro_v2_3_5_Setup.exe
             release/SHA256.txt
           if-no-files-found: error
           retention-days: 30
