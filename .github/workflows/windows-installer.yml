@@ -7,7 +7,6 @@ on:
     paths:
       - "index.html"
       - "server.py"
-      - "requirements.txt"
       - "db.json"
       - "assets/**"
       - "installer/**"
@@ -25,31 +24,23 @@ jobs:
       - name: Kaynak kodu al
         uses: actions/checkout@v4
 
-      - name: Python 3.12 kur
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-
-      - name: PyInstaller kur
-        shell: powershell
-        run: python -m pip install --upgrade pip pyinstaller
-
-      - name: TeknikServisPro.exe oluştur
+      - name: Dağıtım klasörünü hazırla
         shell: powershell
         run: |
-          python -m PyInstaller --noconfirm --clean --onefile --noconsole `
-            --name TeknikServisPro `
-            --icon assets\TeknikServisPro.ico `
-            server.py
-          if (!(Test-Path "dist\TeknikServisPro.exe")) { throw "TeknikServisPro.exe oluşturulamadı." }
-
-      - name: Dağıtım dosyalarını hazırla
-        shell: powershell
-        run: |
+          New-Item -ItemType Directory -Force dist\runtime\py312_231 | Out-Null
           New-Item -ItemType Directory -Force dist\assets | Out-Null
+          Copy-Item server.py -Destination dist\server.py -Force
           Copy-Item index.html -Destination dist\index.html -Force
           Copy-Item db.json -Destination dist\db.json -Force
           Copy-Item assets\TeknikServisPro.ico -Destination dist\assets\TeknikServisPro.ico -Force
+
+      - name: Resmi Python embedded runtime indir
+        shell: powershell
+        run: |
+          $url = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile python-embed.zip
+          Expand-Archive -Path python-embed.zip -DestinationPath dist\runtime\py312_231 -Force
+          if (!(Test-Path "dist\runtime\py312_231\pythonw.exe")) { throw "Python embedded runtime hazırlanamadı." }
 
       - name: Inno Setup kur
         shell: powershell
@@ -59,12 +50,12 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_3_0_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+          if (!(Test-Path "release\TeknikServisPro_v2_3_1_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
 
       - name: Kurulum dosyasını artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.3.0-Python-Windows-Setup
-          path: release/TeknikServisPro_v2_3_0_Setup.exe
+          name: TeknikServisPro-v2.3.1-Python-Windows-Setup
+          path: release/TeknikServisPro_v2_3_1_Setup.exe
           if-no-files-found: error
           retention-days: 30

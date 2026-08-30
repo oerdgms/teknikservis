@@ -1,2 +1,0 @@
-# Teknik Servis Pro v2.3 çalışma zamanında harici Python paketi kullanmaz.
-# PyInstaller yalnızca GitHub build aşamasında kurulur.

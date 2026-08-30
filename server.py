@@ -4,12 +4,11 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.0'
+APP_VERSION = '2.3.1'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
-# PyInstaller one-file çalışırken kaynakların bulunduğu geçici klasör ile
-# kullanıcı verisinin tutulacağı gerçek kurulum klasörünü birbirinden ayır.
+# Kaynak ve kullanıcı verileri uygulama klasöründe tutulur.
 if getattr(sys, 'frozen', False):
     APP_DIR = Path(sys.executable).resolve().parent
     RESOURCE_DIR = Path(getattr(sys, '_MEIPASS', APP_DIR))
@@ -27,7 +26,7 @@ SESSION_TTL = 12 * 60 * 60
 
 def empty_db():
     return {
-        'version': 2.3,
+        'version': 2.31,
         'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -72,7 +71,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.3
+    normalized['version'] = 2.31
     temp = DB_FILE.with_suffix('.json.tmp')
     temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
     os.replace(temp, DB_FILE)
@@ -141,7 +140,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3'
+    server_version = 'TeknikServisPro/2.3.1'
 
     def log_message(self, fmt, *args):
         try:
@@ -203,6 +202,12 @@ class Handler(SimpleHTTPRequestHandler):
     def do_POST(self):
         p = urlparse(self.path).path
         try:
+            if p == '/api/shutdown':
+                if self.client_address[0] not in ('127.0.0.1', '::1'):
+                    return self.send_json({'error': 'Yetkisiz'}, 403)
+                self.send_json({'success': True})
+                threading.Thread(target=self.server.shutdown, daemon=True).start()
+                return
             body = self.read_json()
             if p == '/api/auth/setup':
                 db = read_db()
@@ -305,7 +310,7 @@ def main():
         server.serve_forever()
     except Exception as e:
         log_exception(e)
-        # Konsolsuz EXE'de de kullanıcıya anlaşılır mesaj ver.
+        # pythonw ile çalışırken de kullanıcıya anlaşılır mesaj ver.
         try:
             import ctypes
             ctypes.windll.user32.MessageBoxW(None, f'Teknik Servis Pro başlatılamadı.\n\nAyrıntı: {e}\n\nLog: {LOG_DIR / "server-error.log"}', 'Teknik Servis Pro', 0x10)

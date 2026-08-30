@@ -52,7 +52,7 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - Aynı logo Windows kurulum sihirbazı ve kaldırma kaydında kullanılır.
 - GitHub Actions launcher EXE'yi otomatik derleyip Inno Setup kurulumunu üretir.
 
-## v2.3.0 - Python Edition
+## v2.3.1 - Python Edition
 
 - Node.js, `node_modules`, npm ve eski launcher zinciri tamamen kaldırıldı.
 - Backend Python standart kütüphanesiyle yeniden yazıldı.
@@ -64,3 +64,12 @@ Mevcut servis kayıtları korunarak orta seviye teknik servis yönetim yapısın
 - Hedef bilgisayarda Python veya Node.js kurulumu gerekmez.
 - Masaüstü/Başlat menüsü kısayol logosu korunur.
 - A5 dikey iki nüsha servis fişi korunur.
+
+## v2.3.1 — Installer Hotfix
+- PyInstaller ile üretilen `TeknikServisPro.exe` kaldırıldı.
+- Resmi Python 3.12 embedded runtime kullanılıyor.
+- Masaüstü/Başlat menüsü kısayolu Teknik Servis Pro ikonunu koruyor.
+- Kurulum öncesi yerel sunucuya temiz kapanış isteği gönderiliyor.
+- Eski v2.3.0 `TeknikServisPro.exe` süreci yükseltmede kapatılıyor.
+- Eski Node/VBS/launcher dosyaları kurulum sırasında temizleniyor.
+- `db.json` güncellemelerde korunuyor.
