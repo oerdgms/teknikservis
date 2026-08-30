@@ -11,3 +11,6 @@ v2.3.7 ve daha eski sürümden ilk açılışta program, kurulum klasöründeki 
 
 ## GitHub Actions
 Actions > `Teknik Servis Pro - Windows Kurulum` > `Run workflow`.
+
+### Hotfix5
+Mobil Seri No / IMEI kamera butonu iPhone/Safari için fotoğrafla barkod/QR tarama yedeği içerir. Canlı tarama desteklenirse kullanılmaya devam eder.

@@ -40,3 +40,9 @@
 - Canlı kullanıcı verisi `%LOCALAPPDATA%\TeknikServisPro\Data\db.json` altında kalmaya devam ediyor ve installer tarafından ezilmiyor.
 - GitHub Actions, installer aşamasından önce PyInstaller çıktısında seed `db.json` bulunduğunu doğruluyor.
 
+## v2.3.8 Hotfix5 – iPhone/Safari Seri No Kamera Düzeltmesi
+- iPhone/Safari ve HTTP/Tailscale bağlantılarında `BarcodeDetector` bulunmadığında kamera butonunun işlemsiz kalması düzeltildi.
+- Canlı tarama desteklenmeyen cihazlarda kamera butonu artık doğrudan telefonun fotoğraf/kamera seçicisini açar.
+- Çekilen/seçilen fotoğraftaki QR, Data Matrix ve yaygın 1D barkodlar `html5-qrcode` ile taranıp Seri No / IMEI alanına yazılır.
+- HTTPS/secure context bulunan destekli tarayıcılarda mevcut canlı barkod tarama korunur.
+- Kod okunamazsa kullanıcıya yeniden yakın/net fotoğraf çekme veya elle giriş mesajı gösterilir.
