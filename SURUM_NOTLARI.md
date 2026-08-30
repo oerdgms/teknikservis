@@ -1,3 +1,12 @@
+# Teknik Servis Pro v2.3.8 Hotfix3
+
+- Yedek geri yükleme artık backend üzerinden doğrudan kalıcı Data\db.json dosyasına yazılır.
+- Geri yükleme sonrası diskten tekrar okunarak servis/kasa/stok kayıt sayıları doğrulanır.
+- Doğrulama başarısızsa kullanıcıya başarı mesajı verilmez.
+- Eski DB kurtarma/migration mantığı artık süreç başlangıcında yalnızca bir kez çalışır; normal veri okumalarında canlı DB üzerine yazamaz.
+- DB yazımında flush + fsync + atomic replace kullanılır.
+- Diagnostics veri dosyası, boyut, PID ve kayıt sayılarını gösterir.
+
 # Teknik Servis Pro v2.3.8
 
 - Canlı veritabanı program/EXE klasöründen ayrıldı.

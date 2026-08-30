@@ -33,6 +33,7 @@ LEGACY_DB_FILE = APP_DIR / 'db.json'
 SEED_DB_FILE = RESOURCE_DIR / 'db.json'
 SESSIONS = {}
 SESSION_TTL = 12 * 60 * 60
+_STORAGE_READY = False
 
 
 def empty_db():
@@ -80,53 +81,56 @@ def _merge_users_if_needed(recovered, current):
 
 
 def ensure_storage():
+    global _STORAGE_READY
+    if _STORAGE_READY:
+        return
+
     USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
     BACKUP_DIR.mkdir(parents=True, exist_ok=True)
     LOG_DIR.mkdir(parents=True, exist_ok=True)
     if not INDEX_FILE.exists():
         raise FileNotFoundError(f'Arayüz dosyası bulunamadı: {INDEX_FILE}')
 
-    # Önce eski sürümdeki canlı DB ve olası eski yedekleri ara.
+    # Migration/kurtarma yalnızca süreç başlarken bir kez yapılır.
+    # Normal veri okuma/yazmada eski dosyalar tekrar karşılaştırılmaz;
+    # böylece geri yüklenen veya sonradan değiştirilen canlı DB'nin üstüne yazılamaz.
+    current_raw = _read_db_candidate(DB_FILE) if DB_FILE.exists() else None
+    current_score = _data_score(current_raw)
+
     legacy_candidates = []
     for candidate in (LEGACY_DB_FILE, APP_DIR / 'data' / 'db.json'):
         if candidate.exists() and candidate.resolve() != DB_FILE.resolve():
             legacy_candidates.append(candidate)
-    for folder in (APP_DIR / 'backups',):
-        if folder.exists():
-            legacy_candidates.extend(sorted(folder.glob('*.json'), key=lambda x: x.stat().st_mtime, reverse=True))
+    old_backup_dir = APP_DIR / 'backups'
+    if old_backup_dir.exists():
+        legacy_candidates.extend(sorted(old_backup_dir.glob('*.json'), key=lambda x: x.stat().st_mtime, reverse=True))
 
-    current_raw = _read_db_candidate(DB_FILE) if DB_FILE.exists() else None
-    current_score = _data_score(current_raw)
-
-    best_path = None
-    best_raw = None
-    best_score = current_score
-    for candidate in legacy_candidates:
-        raw = _read_db_candidate(candidate)
-        score = _data_score(raw)
-        if score > best_score:
-            best_path, best_raw, best_score = candidate, raw, score
-
-    # İlk hatalı 2.3.8 çalıştırmasında boş kalıcı DB oluşmuş olsa bile,
-    # eski klasörde daha zengin gerçek veri varsa onu otomatik kurtar.
-    if best_path is not None and best_raw is not None:
-        if DB_FILE.exists():
-            try:
-                rescue = BACKUP_DIR / f'pre_recovery_{time.strftime("%Y-%m-%dT%H-%M-%S")}.json'
-                shutil.copy2(DB_FILE, rescue)
-            except OSError:
-                pass
-        best_raw = _merge_users_if_needed(best_raw, current_raw)
-        DB_FILE.write_text(json.dumps(best_raw, ensure_ascii=False, indent=2), encoding='utf-8')
-        current_raw = best_raw
+    # Yalnızca canlı DB yoksa veya gerçekten boşsa eski gerçek veriyi kurtar.
+    if current_score <= 0:
+        best_path = None
+        best_raw = None
+        best_score = current_score
+        for candidate in legacy_candidates:
+            raw = _read_db_candidate(candidate)
+            score = _data_score(raw)
+            if score > best_score:
+                best_path, best_raw, best_score = candidate, raw, score
+        if best_path is not None and best_raw is not None:
+            if DB_FILE.exists():
+                try:
+                    rescue = BACKUP_DIR / f'pre_recovery_{time.strftime("%Y-%m-%dT%H-%M-%S")}.json'
+                    shutil.copy2(DB_FILE, rescue)
+                except OSError:
+                    pass
+            best_raw = _merge_users_if_needed(best_raw, current_raw)
+            DB_FILE.write_text(json.dumps(best_raw, ensure_ascii=False, indent=2), encoding='utf-8')
+            current_raw = best_raw
 
     if not DB_FILE.exists():
-        # Eski canlı DB yoksa paket içindeki seed yalnızca ilk kurulum için kullanılır.
         seed = _read_db_candidate(SEED_DB_FILE) if SEED_DB_FILE.exists() else None
-        if seed is not None:
-            DB_FILE.write_text(json.dumps(seed, ensure_ascii=False, indent=2), encoding='utf-8')
-        else:
-            DB_FILE.write_text(json.dumps(empty_db(), ensure_ascii=False, indent=2), encoding='utf-8')
+        DB_FILE.write_text(json.dumps(seed if seed is not None else empty_db(), ensure_ascii=False, indent=2), encoding='utf-8')
+
+    _STORAGE_READY = True
 
 
 def normalize_db(raw):
@@ -153,9 +157,24 @@ def write_db(data):
     normalized = normalize_db(data)
     normalized['version'] = 2.38
     temp = DB_FILE.with_suffix('.json.tmp')
-    temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
+    payload = json.dumps(normalized, ensure_ascii=False, indent=2)
+    with temp.open('w', encoding='utf-8') as f:
+        f.write(payload)
+        f.flush()
+        os.fsync(f.fileno())
     os.replace(temp, DB_FILE)
     return normalized
+
+
+def db_summary(db):
+    return {
+        'serviceCount': len(db.get('serviceRecords') or []),
+        'cashCount': len(db.get('cashRecords') or []),
+        'inventoryCount': len(db.get('inventory') or []),
+        'dataFile': str(DB_FILE),
+        'dataFileExists': DB_FILE.exists(),
+        'dataFileSize': DB_FILE.stat().st_size if DB_FILE.exists() else 0,
+    }
 
 
 def backup_current_db():
@@ -273,13 +292,9 @@ class Handler(SimpleHTTPRequestHandler):
             if p == '/api/diagnostics':
                 if not self.auth(): return
                 db = read_db()
-                return self.send_json({
-                    'ok': True, 'version': APP_VERSION,
-                    'dataFile': str(DB_FILE),
-                    'serviceCount': len(db.get('serviceRecords', [])),
-                    'cashCount': len(db.get('cashRecords', [])),
-                    'inventoryCount': len(db.get('inventory', []))
-                })
+                info = db_summary(db)
+                info.update({'ok': True, 'version': APP_VERSION, 'pid': os.getpid(), 'appDir': str(APP_DIR)})
+                return self.send_json(info)
             if p == '/api/auth/status':
                 db = read_db(); u = session_user(self.headers)
                 return self.send_json({'setupRequired': len(db['users']) == 0, 'authenticated': bool(u), 'user': u})
@@ -346,10 +361,26 @@ class Handler(SimpleHTTPRequestHandler):
                 if any(str(x.get('username','')).casefold()==username.casefold() for x in db['users']): return self.send_json({'error':'Bu kullanıcı adı zaten kullanılıyor'},409)
                 db['users'].append({'id':int(time.time()*1000),'name':name,'username':username,'role':role,'active':True,'passwordHash':hash_password(password),'createdAt':time.strftime('%Y-%m-%dT%H:%M:%S')})
                 backup_current_db(); write_db(db); return self.send_json({'success':True})
+            if p == '/api/backup/restore':
+                if not self.auth(): return
+                current = read_db()
+                restored = normalize_db(body)
+                restored['users'] = current['users']
+                expected = db_summary(restored)
+                backup_current_db()
+                write_db(restored)
+                verified = read_db()
+                actual = db_summary(verified)
+                if (actual['serviceCount'] != expected['serviceCount'] or
+                    actual['cashCount'] != expected['cashCount'] or
+                    actual['inventoryCount'] != expected['inventoryCount']):
+                    return self.send_json({'error':'Geri yükleme disk doğrulaması başarısız', 'expected':expected, 'actual':actual},500)
+                return self.send_json({'success':True, **actual})
             if p == '/api/data':
                 if not self.auth(): return
                 current=read_db(); nextdb=normalize_db(body); nextdb['users']=current['users']; backup_current_db(); write_db(nextdb)
-                return self.send_json({'success':True})
+                verified = read_db()
+                return self.send_json({'success':True, **db_summary(verified)})
             return self.send_json({'error':'Bulunamadı'},404)
         except Exception as e:
             log_exception(e); return self.send_json({'error':'Sunucu hatası'},500)
