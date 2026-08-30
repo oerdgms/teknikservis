@@ -9,7 +9,6 @@ on:
       - "server.py"
       - "desktop_launcher.py"
       - "db.json"
-      - "TeknikServisPro.spec"
       - "assets/**"
       - "installer/**"
       - ".github/workflows/windows-installer.yml"
@@ -43,10 +42,36 @@ jobs:
           python -m py_compile server.py
           python -m py_compile desktop_launcher.py
 
+      - name: Kaynak dosyalarını doğrula
+        shell: pwsh
+        run: |
+          $required = @(
+            "server.py",
+            "desktop_launcher.py",
+            "index.html",
+            "db.json",
+            "assets\TeknikServisPro.ico",
+            "installer\TeknikServisPro.iss"
+          )
+          foreach ($file in $required) {
+            if (!(Test-Path $file)) { throw "Gerekli kaynak dosya bulunamadı: $file" }
+          }
+
       - name: Windows uygulamasını oluştur
         shell: pwsh
         run: |
-          pyinstaller --noconfirm --clean TeknikServisPro.spec
+          python -m PyInstaller `
+            --noconfirm `
+            --clean `
+            --onedir `
+            --windowed `
+            --name TeknikServisPro `
+            --icon "assets\TeknikServisPro.ico" `
+            --add-data "index.html;." `
+            --add-data "db.json;." `
+            --add-data "assets\TeknikServisPro.ico;assets" `
+            "desktop_launcher.py"
+
           if (!(Test-Path "dist\TeknikServisPro\TeknikServisPro.exe")) {
             throw "TeknikServisPro.exe oluşturulamadı."
           }

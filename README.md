@@ -17,3 +17,7 @@ Kurulum güncelleme sırasında çalışan v2.3.4+ sunucuya yerel kapanış iste
 5. Build tamamlanınca `TeknikServisPro-v2.3.4-Python-Windows-Setup` artifact'ını indirin.
 
 > Not: Kurulum EXE'si kod imzalama sertifikasıyla imzalı değildir. Antivirüs/SmartScreen itibarı konusunda en güçlü kalıcı çözüm Authenticode kod imzalamadır; bu sürüm PyInstaller'ı kaldırarak yanlış pozitif yüzeyini azaltır.
+
+
+## v2.3.4 Build Hotfix
+GitHub Actions PyInstaller derlemesi artık `.spec` dosyasına bağımlı değildir. Workflow gerekli kaynakları kontrol eder ve `python -m PyInstaller` komutunu doğrudan çalıştırır.
