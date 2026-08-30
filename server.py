@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.2'
+APP_VERSION = '2.3.3'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -26,7 +26,7 @@ SESSION_TTL = 12 * 60 * 60
 
 def empty_db():
     return {
-        'version': 2.32,
+        'version': 2.33,
         'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -71,7 +71,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.32
+    normalized['version'] = 2.33
     temp = DB_FILE.with_suffix('.json.tmp')
     temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2), encoding='utf-8')
     os.replace(temp, DB_FILE)
@@ -140,7 +140,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.2'
+    server_version = 'TeknikServisPro/2.3.3'
 
     def log_message(self, fmt, *args):
         try:

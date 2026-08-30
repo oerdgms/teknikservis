@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.3.2
+# Teknik Servis Pro v2.3.3
 
 - Mobil hamburger menü öğeleri tam kart yüzeyinden tıklanabilir hale getirildi ve seçim sonrası menü otomatik kapanır.
 - Mobil üst bar butonları küçültüldü; başlık için daha fazla alan açıldı.

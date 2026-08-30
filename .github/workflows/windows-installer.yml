@@ -27,7 +27,7 @@ jobs:
       - name: Dağıtım klasörünü hazırla
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force dist\runtime\py312_232 | Out-Null
+          New-Item -ItemType Directory -Force dist\runtime\py312_233 | Out-Null
           New-Item -ItemType Directory -Force dist\assets | Out-Null
           Copy-Item server.py -Destination dist\server.py -Force
           Copy-Item index.html -Destination dist\index.html -Force
@@ -39,8 +39,8 @@ jobs:
         run: |
           $url = "https://www.python.org/ftp/python/3.12.10/python-3.12.10-embed-amd64.zip"
           Invoke-WebRequest -Uri $url -OutFile python-embed.zip
-          Expand-Archive -Path python-embed.zip -DestinationPath dist\runtime\py312_232 -Force
-          if (!(Test-Path "dist\runtime\py312_232\pythonw.exe")) { throw "Python embedded runtime hazırlanamadı." }
+          Expand-Archive -Path python-embed.zip -DestinationPath dist\runtime\py312_233 -Force
+          if (!(Test-Path "dist\runtime\py312_233\pythonw.exe")) { throw "Python embedded runtime hazırlanamadı." }
 
       - name: Inno Setup kur
         shell: powershell
@@ -50,12 +50,12 @@ jobs:
         shell: powershell
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "installer\TeknikServisPro.iss"
-          if (!(Test-Path "release\TeknikServisPro_v2_3_2_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
+          if (!(Test-Path "release\TeknikServisPro_v2_3_3_Setup.exe")) { throw "Kurulum EXE dosyası oluşturulamadı." }
 
       - name: Kurulum dosyasını artifact olarak yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.3.2-Python-Windows-Setup
-          path: release/TeknikServisPro_v2_3_2_Setup.exe
+          name: TeknikServisPro-v2.3.3-Python-Windows-Setup
+          path: release/TeknikServisPro_v2_3_3_Setup.exe
           if-no-files-found: error
           retention-days: 30
