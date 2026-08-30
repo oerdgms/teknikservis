@@ -18,3 +18,9 @@
 - İlk kurulum seed verisi doğrudan `app\db.json` kaynağından alınır ve mevcut `db.json` asla ezilmez.
 - 30/08/2026 kasa yedeği kurulumda `%LOCALAPPDATA%\TeknikServisPro\Data\importable-backups` altına güvenli kopya olarak bırakılır.
 - Canlı veri ve yedek birbirinden ayrı tutulur.
+
+
+### Build Hotfix 2
+- Git tarafından yok sayılan `backups/` kaynağı kaldırıldı.
+- Kurulumla gelen referans yedek `app/bundled_backups/` altına taşındı.
+- Workflow ve Inno Setup aynı yeni yolu kullanıyor.
