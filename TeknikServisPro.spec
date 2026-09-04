@@ -10,6 +10,7 @@ a = Analysis(
     binaries=[],
     datas=[
         (str(app_root / "index.html"), "."),
+        (str(app_root / "portal.html"), "."),
         (str(app_root / "db.json"), "."),
         (str(app_root / "assets" / "TeknikServisPro.ico"), "assets"),
     ],

@@ -1,10 +1,10 @@
 import os, sys, json, time, secrets, hashlib, hmac, shutil, threading, webbrowser, traceback
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse
+from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.9'
+APP_VERSION = '2.4.0'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -38,7 +38,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.39,
+        'version': 2.40,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -157,7 +157,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.39
+    normalized['version'] = 2.40
     temp = DB_FILE.with_suffix('.json.tmp')
     payload = json.dumps(normalized, ensure_ascii=False, indent=2)
     with temp.open('w', encoding='utf-8') as f:
@@ -242,8 +242,35 @@ def new_session(user):
     return token, clean
 
 
+def _norm_phone(value):
+    return "".join(ch for ch in str(value or "") if ch.isdigit())
+
+
+def _portal_service(db, service_no, phone):
+    wanted_no = str(service_no or "").strip().casefold()
+    wanted_phone = _norm_phone(phone)
+    if not wanted_no or len(wanted_phone) < 7:
+        return None
+    for rec in db.get("serviceRecords") or []:
+        if str(rec.get("serviceNo","")).strip().casefold() == wanted_no and _norm_phone(rec.get("customerPhone")) == wanted_phone:
+            return rec
+    return None
+
+
+def _public_service(rec, settings):
+    offers=[]
+    for o in rec.get("offers") or []:
+        offers.append({k:o.get(k) for k in ("id","version","amount","note","status","createdAt","decidedAt")})
+    history=[]
+    for h in rec.get("history") or []:
+        if h.get("visibility") == "internal":
+            continue
+        history.append({"date":h.get("date"),"text":h.get("text") or h.get("title") or "","type":h.get("type","activity"),"actor":h.get("actor","Servis")})
+    return {"business":{"name":settings.get("businessName","Teknik Servis Pro"),"phone":settings.get("phone",""),"email":settings.get("email","")},"serviceNo":rec.get("serviceNo"),"customerName":rec.get("customerName"),"deviceType":rec.get("deviceType"),"deviceModel":rec.get("deviceModel"),"serialNo":rec.get("serialNo"),"complaint":rec.get("complaint"),"status":rec.get("status"),"entryDate":rec.get("entryDate"),"estimatedDate":rec.get("estimatedDate"),"warrantyUntil":rec.get("warrantyUntil"),"totalFee":rec.get("totalFee",0),"paidAmount":rec.get("paidAmount",0),"offers":offers,"history":history}
+
+
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.9'
+    server_version = 'TeknikServisPro/2.4.0'
 
     def log_message(self, fmt, *args):
         try:
@@ -305,6 +332,12 @@ class Handler(SimpleHTTPRequestHandler):
             if p == '/api/users':
                 if not self.auth(admin=True): return
                 return self.send_json([safe_user(x) for x in read_db()['users']])
+            if p == '/api/portal':
+                q = parse_qs(urlparse(self.path).query)
+                db = read_db()
+                rec = _portal_service(db, (q.get('serviceNo') or [''])[0], (q.get('phone') or [''])[0])
+                if not rec: return self.send_json({'error':'Servis kaydı bulunamadı. Servis no ve telefonu kontrol edin.'},404)
+                return self.send_json({'success':True, 'service':_public_service(rec, db.get('settings') or {})})
             if p == '/api/data':
                 if not self.auth(): return
                 db = read_db(); db.pop('users', None)
@@ -365,6 +398,26 @@ class Handler(SimpleHTTPRequestHandler):
                 if any(str(x.get('username','')).casefold()==username.casefold() for x in db['users']): return self.send_json({'error':'Bu kullanıcı adı zaten kullanılıyor'},409)
                 db['users'].append({'id':int(time.time()*1000),'name':name,'username':username,'role':role,'active':True,'passwordHash':hash_password(password),'createdAt':time.strftime('%Y-%m-%dT%H:%M:%S')})
                 backup_current_db(); write_db(db); return self.send_json({'success':True})
+            if p == '/api/portal/decision':
+                db = read_db()
+                rec = _portal_service(db, body.get('serviceNo'), body.get('phone'))
+                if not rec: return self.send_json({'error':'Servis kaydı bulunamadı'},404)
+                offers = rec.get('offers') if isinstance(rec.get('offers'), list) else []
+                offer = next((x for x in offers if str(x.get('id')) == str(body.get('offerId'))), None)
+                if not offer: return self.send_json({'error':'Teklif bulunamadı'},404)
+                if offer.get('status') != 'Onay Bekliyor': return self.send_json({'error':'Bu teklif daha önce sonuçlandırılmış'},409)
+                decision = str(body.get('decision','')).lower()
+                if decision not in ('approve','reject'): return self.send_json({'error':'Geçersiz karar'},400)
+                now = time.strftime('%Y-%m-%dT%H:%M:%S')
+                if decision == 'approve':
+                    offer['status']='Onaylandı'; rec['status']='İşlemde'; text=f"Teklif v{offer.get('version','')} müşteri portalından onaylandı · {offer.get('amount',0)} TL"
+                else:
+                    offer['status']='Reddedildi'; rec['status']='Arıza Tespit'; text=f"Teklif v{offer.get('version','')} müşteri portalından reddedildi"
+                offer['decidedAt']=now; offer['decisionSource']='Müşteri Portalı'
+                rec['history'] = rec.get('history') if isinstance(rec.get('history'), list) else []
+                rec['history'].append({'date':now,'text':text,'type':'offer','actor':'Müşteri Portalı','visibility':'customer'})
+                backup_current_db(); write_db(db)
+                return self.send_json({'success':True,'service':_public_service(rec, db.get('settings') or {})})
             if p == '/api/backup/restore':
                 if not self.auth(): return
                 current = read_db()

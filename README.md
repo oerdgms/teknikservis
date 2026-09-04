@@ -1,8 +1,8 @@
-# Teknik Servis Pro v2.3.9
+# Teknik Servis Pro v2.4.0
 
 Python tabanlı yerel teknik servis yönetim uygulaması.
 
-## v2.3.9 – Müşteri + Cihaz Yönetimi
+## v2.4.0 – Müşteri + Cihaz Yönetimi
 
 - Müşteri artık kalıcı ana kayıttır; ad/telefon/e-posta/adres/not saklanır.
 - Bir müşteriye birden fazla cihaz bağlanabilir.
@@ -18,9 +18,13 @@ Python tabanlı yerel teknik servis yönetim uygulaması.
 ## Veri güvenliği
 Canlı veriler Windows'ta `%LOCALAPPDATA%\TeknikServisPro\Data\db.json` altında tutulur. Program dosyaları güncellense veya kaldırılıp yeniden kurulsa bile bu klasör installer tarafından silinmez.
 
-v2.3.7 ve daha eski sürümden ilk açılışta program, kurulum klasöründeki mevcut `db.json` dosyasını otomatik olarak kalıcı veri klasörüne kopyalar. v2.3.8 verileri aynı kalıcı klasörden doğrudan v2.3.9'a taşınır.
+v2.3.7 ve daha eski sürümden ilk açılışta program, kurulum klasöründeki mevcut `db.json` dosyasını otomatik olarak kalıcı veri klasörüne kopyalar. v2.3.8 verileri aynı kalıcı klasörden doğrudan v2.4.0'a taşınır.
 
 ## GitHub Actions
 Actions > `Teknik Servis Pro - Windows Kurulum` > `Run workflow`.
 
 Mobil Seri No / IMEI kamera butonunda iPhone/Safari için fotoğrafla barkod/QR tarama yedeği korunmuştur.
+
+
+## v2.4.0
+Servis zaman çizelgesi, teklif/onay, stoktan parça kullanımı, WhatsApp bilgilendirme ve müşteri portalı eklendi.
