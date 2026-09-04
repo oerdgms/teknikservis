@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.5.1'
+APP_VERSION = '2.5.2'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -39,13 +39,13 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.51,
+        'version': 2.52,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
             'businessSubtitle': 'Bilgisayar & Donanım Onarım Servisi',
             'phone': '', 'email': '', 'address': '', 'taxOffice': '', 'taxNo': '',
-            'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue'
+            'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue', 'portalPublicUrl': 'https://takip.sarkislasistem.com'
         }
     }
 
@@ -147,6 +147,8 @@ def normalize_db(raw):
         out[key] = raw.get(key) if isinstance(raw.get(key), list) else []
     settings = raw.get('settings') if isinstance(raw.get('settings'), dict) else {}
     out['settings'] = {**base['settings'], **settings}
+    if not out['settings'].get('portalPublicUrl'):
+        out['settings']['portalPublicUrl'] = 'https://takip.sarkislasistem.com'
     return out
 
 
@@ -154,7 +156,14 @@ def read_db():
     ensure_storage()
     db=normalize_db(json.loads(DB_FILE.read_text(encoding='utf-8-sig')))
     changed=False
+    for customer in db.get('customers') or []:
+        phone = _norm_phone(customer.get('phone'))
+        if _valid_tr_mobile(phone) and customer.get('phone') != phone:
+            customer['phone'] = phone; changed = True
     for rec in db.get('serviceRecords') or []:
+        phone = _norm_phone(rec.get('customerPhone'))
+        if _valid_tr_mobile(phone) and rec.get('customerPhone') != phone:
+            rec['customerPhone'] = phone; changed = True
         if not rec.get('portalToken'):
             rec['portalToken']=secrets.token_urlsafe(24); changed=True
     if changed: write_db(db)
@@ -164,8 +173,15 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.51
+    normalized['version'] = 2.52
+    for customer in normalized.get('customers') or []:
+        phone = _norm_phone(customer.get('phone'))
+        if _valid_tr_mobile(phone):
+            customer['phone'] = phone
     for rec in normalized.get('serviceRecords') or []:
+        phone = _norm_phone(rec.get('customerPhone'))
+        if _valid_tr_mobile(phone):
+            rec['customerPhone'] = phone
         if not rec.get('portalToken'):
             rec['portalToken'] = secrets.token_urlsafe(24)
     temp = DB_FILE.with_suffix('.json.tmp')
@@ -253,7 +269,17 @@ def new_session(user):
 
 
 def _norm_phone(value):
-    return "".join(ch for ch in str(value or "") if ch.isdigit())
+    digits = "".join(ch for ch in str(value or "") if ch.isdigit())
+    if len(digits) == 12 and digits.startswith("90") and digits[2:3] == "5":
+        digits = "0" + digits[2:]
+    elif len(digits) == 10 and digits.startswith("5"):
+        digits = "0" + digits
+    return digits
+
+
+def _valid_tr_mobile(value):
+    digits = _norm_phone(value)
+    return len(digits) == 11 and digits.startswith("05")
 
 
 def _portal_service_by_token(db, token):
@@ -287,7 +313,7 @@ def _public_service(rec, settings):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.5.1'
+    server_version = 'TeknikServisPro/2.5.2'
 
     def log_message(self, fmt, *args):
         try:

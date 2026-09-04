@@ -236,10 +236,12 @@
     }
   ],
   "cashRecords": [],
-  "version": 2.5,
+  "version": 2.52,
   "customers": [],
   "devices": [],
   "inventory": [],
   "users": [],
-  "settings": {}
+  "settings": {
+    "portalPublicUrl": "https://takip.sarkislasistem.com"
+  }
 }

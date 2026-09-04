@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.5.1
+# Teknik Servis Pro v2.5.2
 
 ## CRM / Servis Operasyon Sürümü
 
@@ -14,9 +14,9 @@
 - v2.4.x verileri geriye uyumlu şekilde korunur.
 
 ## Build
-GitHub Actions > Windows Installer workflow ile `TeknikServisPro_v2_5_1_Setup.exe` oluşturulur.
+GitHub Actions > Windows Installer workflow ile `TeknikServisPro_v2_5_2_Setup.exe` oluşturulur.
 
-## v2.5.1 Secure Customer Portal
+## v2.5.2 Secure Customer Portal
 - Yönetim uygulaması: `http://127.0.0.1:8972`
 - Dış müşteri portalı için güvenli yerel uç: `http://127.0.0.1:8973`
 - Tailscale Funnel yalnız 8973 portuna yönlendirilmelidir: `tailscale funnel --bg 8973`
