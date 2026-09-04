@@ -1,10 +1,10 @@
-# Teknik Servis Pro v2.5.0 – Sürüm Notları
+# Teknik Servis Pro v2.5.1
 
-1. CRM Dashboard yeniden düzenlendi; sağ uyarı kolonu kaldırıldı.
-2. Servis Zaman Çizelgesi operasyon ekranında görünür hale getirildi.
-3. Teklif & Müşteri Onayı revizyon geçmişi ve portal onayı ile birlikte çalışır.
-4. Parça → Stok entegrasyonu servis maliyet/tutar akışına bağlıdır.
-5. WhatsApp/SMS hazır mesaj merkezi eklendi.
-6. Müşteri Portalı menüden ve servis operasyon ekranından erişilebilir.
-7. Teknisyen İş Yükü ekranı ve teknisyen servis filtresi eklendi.
-8. v2.4.x kalıcı veri ve yedek yapısı korunmuştur.
+- Secure Customer Portal eklendi.
+- Her servis kaydı için tahmin edilmesi zor portalToken oluşturulur ve kalıcı veride saklanır.
+- Müşteri takip linkleri `?token=...` kullanır; telefon numarası URL içinde paylaşılmaz.
+- Ayrı portal-only sunucu 127.0.0.1:8973 üzerinde çalışır.
+- 8973 üzerinden yönetim paneli, kullanıcı API'leri, veri API'si ve ayarlar dış erişime kapalıdır.
+- Tailscale Funnel doğrudan 8973 portuna bağlanabilir.
+- Ayarlara “Dış Müşteri Portalı Adresi” eklendi; WhatsApp/SMS hazır mesajları bu adresi kullanır.
+- Eski Servis No + Telefon sorgulaması portal ana sayfasında geriye dönük olarak kullanılabilir.

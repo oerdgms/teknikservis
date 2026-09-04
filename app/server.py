@@ -4,8 +4,9 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.5.0'
+APP_VERSION = '2.5.1'
 PORT = int(os.environ.get('PORT', '8972'))
+PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
 # Program dosyaları ile canlı işletme verisini birbirinden ayır.
@@ -38,7 +39,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.50,
+        'version': 2.51,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -151,13 +152,22 @@ def normalize_db(raw):
 
 def read_db():
     ensure_storage()
-    return normalize_db(json.loads(DB_FILE.read_text(encoding='utf-8-sig')))
+    db=normalize_db(json.loads(DB_FILE.read_text(encoding='utf-8-sig')))
+    changed=False
+    for rec in db.get('serviceRecords') or []:
+        if not rec.get('portalToken'):
+            rec['portalToken']=secrets.token_urlsafe(24); changed=True
+    if changed: write_db(db)
+    return db
 
 
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.50
+    normalized['version'] = 2.51
+    for rec in normalized.get('serviceRecords') or []:
+        if not rec.get('portalToken'):
+            rec['portalToken'] = secrets.token_urlsafe(24)
     temp = DB_FILE.with_suffix('.json.tmp')
     payload = json.dumps(normalized, ensure_ascii=False, indent=2)
     with temp.open('w', encoding='utf-8') as f:
@@ -246,6 +256,13 @@ def _norm_phone(value):
     return "".join(ch for ch in str(value or "") if ch.isdigit())
 
 
+def _portal_service_by_token(db, token):
+    token = str(token or '').strip()
+    if len(token) < 20: return None
+    for rec in db.get('serviceRecords') or []:
+        if hmac.compare_digest(str(rec.get('portalToken') or ''), token): return rec
+    return None
+
 def _portal_service(db, service_no, phone):
     wanted_no = str(service_no or "").strip().casefold()
     wanted_phone = _norm_phone(phone)
@@ -270,7 +287,7 @@ def _public_service(rec, settings):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.5.0'
+    server_version = 'TeknikServisPro/2.5.1'
 
     def log_message(self, fmt, *args):
         try:
@@ -333,11 +350,13 @@ class Handler(SimpleHTTPRequestHandler):
                 if not self.auth(admin=True): return
                 return self.send_json([safe_user(x) for x in read_db()['users']])
             if p == '/api/portal':
-                q = parse_qs(urlparse(self.path).query)
-                db = read_db()
-                rec = _portal_service(db, (q.get('serviceNo') or [''])[0], (q.get('phone') or [''])[0])
-                if not rec: return self.send_json({'error':'Servis kaydı bulunamadı. Servis no ve telefonu kontrol edin.'},404)
-                return self.send_json({'success':True, 'service':_public_service(rec, db.get('settings') or {})})
+                q = parse_qs(urlparse(self.path).query); db = read_db()
+                token=(q.get('token') or [''])[0]
+                rec = _portal_service_by_token(db, token) if token else _portal_service(db, (q.get('serviceNo') or [''])[0], (q.get('phone') or [''])[0])
+                if not rec: return self.send_json({'error':'Servis kaydı bulunamadı veya bağlantı geçersiz.'},404)
+                if not rec.get('portalToken'):
+                    rec['portalToken']=secrets.token_urlsafe(24); write_db(db)
+                return self.send_json({'success':True, 'service':_public_service(rec, db.get('settings') or {}), 'portalToken':rec.get('portalToken')})
             if p == '/api/data':
                 if not self.auth(): return
                 db = read_db(); db.pop('users', None)
@@ -400,7 +419,7 @@ class Handler(SimpleHTTPRequestHandler):
                 backup_current_db(); write_db(db); return self.send_json({'success':True})
             if p == '/api/portal/decision':
                 db = read_db()
-                rec = _portal_service(db, body.get('serviceNo'), body.get('phone'))
+                rec = _portal_service_by_token(db, body.get('token')) if body.get('token') else _portal_service(db, body.get('serviceNo'), body.get('phone'))
                 if not rec: return self.send_json({'error':'Servis kaydı bulunamadı'},404)
                 offers = rec.get('offers') if isinstance(rec.get('offers'), list) else []
                 offer = next((x for x in offers if str(x.get('id')) == str(body.get('offerId'))), None)
@@ -464,6 +483,26 @@ class Handler(SimpleHTTPRequestHandler):
             log_exception(e); return self.send_json({'error':'Sunucu hatası'},500)
 
 
+class PublicPortalHandler(Handler):
+    """Internet tüneline yalnız müşteri portalını açar; yönetim paneli/API kapalıdır."""
+    def translate_path(self, path):
+        p=urlparse(path).path
+        if p in ('/','/portal.html'):
+            return str(STATIC_DIR / 'portal.html')
+        return str(STATIC_DIR / '__forbidden__')
+    def do_GET(self):
+        p=urlparse(self.path).path
+        if p == '/api/health': return self.send_json({'ok':True,'version':APP_VERSION,'portalOnly':True})
+        if p == '/api/portal': return super().do_GET()
+        if p in ('/','/portal.html'): return SimpleHTTPRequestHandler.do_GET(self)
+        return self.send_json({'error':'Bu bağlantıda yalnız müşteri portalı kullanılabilir.'},403)
+    def do_POST(self):
+        if urlparse(self.path).path == '/api/portal/decision': return super().do_POST()
+        return self.send_json({'error':'Bu bağlantıda yalnız müşteri portalı kullanılabilir.'},403)
+    def do_PATCH(self):
+        return self.send_json({'error':'Yetkisiz'},403)
+
+
 def log_exception(exc):
     ensure_storage()
     try:
@@ -492,13 +531,13 @@ def main():
     if port_already_running():
         webbrowser.open(f'http://127.0.0.1:{PORT}', new=1); return
     try:
-        server=ThreadingHTTPServer((HOST, PORT), Handler)
-        server.daemon_threads = True
+        server=ThreadingHTTPServer((HOST, PORT), Handler); server.daemon_threads = True
+        public_server=ThreadingHTTPServer(('127.0.0.1', PUBLIC_PORT), PublicPortalHandler); public_server.daemon_threads=True
+        threading.Thread(target=public_server.serve_forever, daemon=True).start()
         threading.Thread(target=open_browser_later, daemon=True).start()
-        try:
-            server.serve_forever()
+        try: server.serve_forever()
         finally:
-            server.server_close()
+            public_server.shutdown(); public_server.server_close(); server.server_close()
     except Exception as e:
         log_exception(e)
         # pythonw ile çalışırken de kullanıcıya anlaşılır mesaj ver.
