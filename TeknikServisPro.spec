@@ -13,6 +13,7 @@ a = Analysis(
         (str(app_root / "portal.html"), "."),
         (str(app_root / "db.json"), "."),
         (str(app_root / "assets" / "TeknikServisPro.ico"), "assets"),
+        (str(app_root / "assets" / "SistemBilgisayar_2026.png"), "assets"),
     ],
     hiddenimports=[],
     hookspath=[],

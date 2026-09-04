@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.6.0'
+APP_VERSION = '2.6.1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -28,6 +28,7 @@ else:
 DB_FILE = USER_DATA_DIR / 'db.json'
 BACKUP_DIR = USER_DATA_DIR / 'backups'
 LOG_DIR = USER_DATA_DIR / 'logs'
+SESSION_FILE = USER_DATA_DIR / 'sessions.json'
 STATIC_DIR = RESOURCE_DIR if getattr(sys, 'frozen', False) else APP_DIR
 INDEX_FILE = STATIC_DIR / 'index.html'
 LEGACY_DB_FILE = APP_DIR / 'db.json'
@@ -39,13 +40,16 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.60,
+        'version': 2.61,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
             'businessSubtitle': 'Bilgisayar & Donanım Onarım Servisi',
             'phone': '', 'email': '', 'address': '', 'taxOffice': '', 'taxNo': '',
-            'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue', 'portalPublicUrl': 'https://takip.sarkislasistem.com'
+            'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue', 'portalPublicUrl': 'https://takip.sarkislasistem.com',
+            'foundedYear': 2003, 'showFoundedYear': True, 'showAnniversary': True,
+            'slogan': 'Teknoloji • Satış • Servis • Çözüm Ortağınız', 'portalTitle': 'Teknik Servis Takip',
+            'portalDescription': 'Servis durumunuzu güvenli şekilde takip edin', 'showBrandOnReceipt': True
         }
     }
 
@@ -241,10 +245,29 @@ def safe_user(u):
     return {k: v for k, v in u.items() if k != 'passwordHash'}
 
 
+def _load_sessions():
+    global SESSIONS
+    try:
+        data = json.loads(SESSION_FILE.read_text(encoding='utf-8')) if SESSION_FILE.exists() else {}
+        SESSIONS = data if isinstance(data, dict) else {}
+    except Exception:
+        SESSIONS = {}
+
+def _save_sessions():
+    try:
+        USER_DATA_DIR.mkdir(parents=True, exist_ok=True)
+        tmp = SESSION_FILE.with_suffix('.tmp')
+        tmp.write_text(json.dumps(SESSIONS, ensure_ascii=False), encoding='utf-8')
+        os.replace(tmp, SESSION_FILE)
+    except Exception as e:
+        log_exception(e)
+
 def cleanup_sessions():
-    now = time.time()
+    now = time.time(); changed=False
     for token in list(SESSIONS):
-        if SESSIONS[token]['expires'] < now: SESSIONS.pop(token, None)
+        if float(SESSIONS[token].get('expires',0)) < now:
+            SESSIONS.pop(token, None); changed=True
+    if changed: _save_sessions()
 
 
 def session_user(headers):
@@ -258,6 +281,7 @@ def session_user(headers):
     session = SESSIONS.get(token)
     if not session: return None
     session['expires'] = time.time() + SESSION_TTL
+    _save_sessions()
     return session['user']
 
 
@@ -265,6 +289,7 @@ def new_session(user):
     token = secrets.token_hex(32)
     clean = {k: user.get(k) for k in ('id', 'name', 'username', 'role')}
     SESSIONS[token] = {'user': clean, 'expires': time.time() + SESSION_TTL}
+    _save_sessions()
     return token, clean
 
 
@@ -300,6 +325,21 @@ def _portal_service(db, service_no, phone):
     return None
 
 
+def _branding(settings):
+    year = int(settings.get("foundedYear") or 0)
+    current_year = int(time.strftime("%Y"))
+    anniversary = max(0, current_year - year) if year else 0
+    return {
+        "name": settings.get("businessName", "Sistem Bilgisayar"),
+        "subtitle": settings.get("businessSubtitle", ""),
+        "phone": settings.get("phone", ""), "email": settings.get("email", ""), "address": settings.get("address", ""),
+        "logo": settings.get("logo", ""), "foundedYear": year, "showFoundedYear": bool(settings.get("showFoundedYear", True)),
+        "showAnniversary": bool(settings.get("showAnniversary", True)), "anniversary": anniversary,
+        "slogan": settings.get("slogan", ""), "portalTitle": settings.get("portalTitle", "Teknik Servis Takip"),
+        "portalDescription": settings.get("portalDescription", "Servis durumunuzu güvenli şekilde takip edin"),
+        "showBrandOnReceipt": bool(settings.get("showBrandOnReceipt", True))
+    }
+
 def _public_service(rec, settings):
     offers=[]
     for o in rec.get("offers") or []:
@@ -312,8 +352,10 @@ def _public_service(rec, settings):
     return {"business":{"name":settings.get("businessName","Sistem Bilgisayar"),"phone":settings.get("phone",""),"email":settings.get("email",""),"address":settings.get("address",""),"subtitle":settings.get("businessSubtitle","")},"serviceNo":rec.get("serviceNo"),"customerName":rec.get("customerName"),"deviceType":rec.get("deviceType"),"deviceModel":rec.get("deviceModel"),"serialNo":rec.get("serialNo"),"complaint":rec.get("complaint"),"status":rec.get("status"),"entryDate":rec.get("entryDate"),"estimatedDate":rec.get("estimatedDate"),"warrantyUntil":rec.get("warrantyUntil"),"totalFee":rec.get("totalFee",0),"paidAmount":rec.get("paidAmount",0),"offers":offers,"history":history}
 
 
+_load_sessions()
+
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.0'
+    server_version = 'TeknikServisPro/2.6.1'
 
     def log_message(self, fmt, *args):
         try:
@@ -369,6 +411,8 @@ class Handler(SimpleHTTPRequestHandler):
                 info = db_summary(db)
                 info.update({'ok': True, 'version': APP_VERSION, 'pid': os.getpid(), 'appDir': str(APP_DIR)})
                 return self.send_json(info)
+            if p == '/api/branding':
+                return self.send_json(_branding(read_db().get('settings') or {}))
             if p == '/api/auth/status':
                 db = read_db(); u = session_user(self.headers)
                 return self.send_json({'setupRequired': len(db['users']) == 0, 'authenticated': bool(u), 'user': u})
@@ -423,7 +467,7 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.send_json({'success': True, 'user': clean}, headers={'Set-Cookie': f'tsp_session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200'})
             if p == '/api/auth/logout':
                 cookie = SimpleCookie(); cookie.load(self.headers.get('Cookie',''))
-                if cookie.get('tsp_session'): SESSIONS.pop(cookie['tsp_session'].value, None)
+                if cookie.get('tsp_session'): SESSIONS.pop(cookie['tsp_session'].value, None); _save_sessions()
                 return self.send_json({'success': True}, headers={'Set-Cookie':'tsp_session=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0'})
             if p == '/api/auth/change-password':
                 current = self.auth()
@@ -521,7 +565,7 @@ class PublicPortalHandler(Handler):
     def do_GET(self):
         p=urlparse(self.path).path
         if p == '/api/health': return self.send_json({'ok':True,'version':APP_VERSION,'portalOnly':True})
-        if p == '/api/portal': return super().do_GET()
+        if p in ('/api/portal','/api/branding'): return super().do_GET()
         if p in ('/','/portal.html','/assets/SistemBilgisayar_2026.png'): return SimpleHTTPRequestHandler.do_GET(self)
         return self.send_json({'error':'Bu bağlantıda yalnız müşteri portalı kullanılabilir.'},403)
     def do_POST(self):
