@@ -1,25 +1,16 @@
-# Teknik Servis Pro v2.5.2
+# Teknik Servis Pro v2.6.0
 
-## CRM / Servis Operasyon Sürümü
+Sistem Bilgisayar için kurumsal kimlik, müşteri portalı ve servis operasyonu sürümü.
 
-- CRM Dashboard: sağdaki Dikkat Gerektirenler kolonu kaldırıldı; Son Servis Hareketleri tam genişlik.
-- Dashboard altı: Bugünün İşleri, Tahsilat Bekleyenler ve Teknisyen İş Yükü.
-- Servis Operasyon Merkezi: zaman çizelgesi, teklif/onay, stoktan parça, müşteri bildirimi ve portal tek detay ekranında.
-- Teklif revizyonları v1/v2/v3 olarak korunur; müşteri portalından veya servis içinden onay/red alınabilir.
-- Kullanılan parça stoktan otomatik düşer, servis tutarına işlenir; geri alma stok iadesi yapar.
-- WhatsApp/SMS hazır mesaj merkezi ve kopyalama desteği.
-- Müşteri Portalı: servis no + telefon ile durum/teklif/zaman çizelgesi, teklif onay/red.
-- Teknisyen İş Yükü: aktif, bekleyen, geciken, hazır ve açık bakiye dağılımı; teknisyene göre servis filtresi.
-- Kalıcı veri: %LOCALAPPDATA%\TeknikServisPro\Data\db.json.
-- v2.4.x verileri geriye uyumlu şekilde korunur.
+## Öne çıkanlar
+- Login sonrası ana ekranı çizen `renderAll()` hotfix'i; giriş döngüsü giderildi.
+- Sistem Bilgisayar kurumsal logo kullanımı: login, sol menü, servis fişi ve müşteri portalı.
+- 2003'ten beri / 23. yıl kurumsal vurgusu (ana logodan bağımsız rozet).
+- Müşteri portalında daha belirgin teklif Onayla/Reddet alanı ve iletişim bilgileri.
+- Müşteri telefonları 05XX XXX XX XX standardında; geçersiz eski kayıtlar Müşteriler ekranında uyarı rozeti alır.
+- Servis kayıtlarında sade tek arama alanı; eski durum/ödeme/öncelik/teknisyen açılır filtreleri yok.
+- A5 iki nüshalı servis fişinde güvenli token QR kodu, takip.sarkislasistem.com, Servis No + Telefon yedek sorgulama bilgisi.
+- Public portal yalnız 8973 üzerinden çalışır; yönetim API'leri dışarıya kapalı kalır.
 
-## Build
-GitHub Actions > Windows Installer workflow ile `TeknikServisPro_v2_5_2_Setup.exe` oluşturulur.
-
-## v2.5.2 Secure Customer Portal
-- Yönetim uygulaması: `http://127.0.0.1:8972`
-- Dış müşteri portalı için güvenli yerel uç: `http://127.0.0.1:8973`
-- Tailscale Funnel yalnız 8973 portuna yönlendirilmelidir: `tailscale funnel --bg 8973`
-- Her servis kaydına rastgele portal erişim anahtarı üretilir.
-- Ayarlar > Dış Müşteri Portalı Adresi alanına Funnel HTTPS adresi girilir.
-- WhatsApp/SMS mesajları telefon numarası yerine güvenli token bağlantısını kullanır.
+## Kurulum
+GitHub Actions > Windows Installer workflow ile `TeknikServisPro_v2_6_0_Setup.exe` oluşturulur. Canlı veritabanı `%LOCALAPPDATA%\TeknikServisPro\Data\db.json` altında korunur.

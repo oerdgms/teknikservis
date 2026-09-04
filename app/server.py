@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.5.2'
+APP_VERSION = '2.6.0'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -39,7 +39,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.52,
+        'version': 2.60,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -173,7 +173,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.52
+    normalized['version'] = 2.60
     for customer in normalized.get('customers') or []:
         phone = _norm_phone(customer.get('phone'))
         if _valid_tr_mobile(phone):
@@ -309,11 +309,11 @@ def _public_service(rec, settings):
         if h.get("visibility") == "internal":
             continue
         history.append({"date":h.get("date"),"text":h.get("text") or h.get("title") or "","type":h.get("type","activity"),"actor":h.get("actor","Servis")})
-    return {"business":{"name":settings.get("businessName","Teknik Servis Pro"),"phone":settings.get("phone",""),"email":settings.get("email","")},"serviceNo":rec.get("serviceNo"),"customerName":rec.get("customerName"),"deviceType":rec.get("deviceType"),"deviceModel":rec.get("deviceModel"),"serialNo":rec.get("serialNo"),"complaint":rec.get("complaint"),"status":rec.get("status"),"entryDate":rec.get("entryDate"),"estimatedDate":rec.get("estimatedDate"),"warrantyUntil":rec.get("warrantyUntil"),"totalFee":rec.get("totalFee",0),"paidAmount":rec.get("paidAmount",0),"offers":offers,"history":history}
+    return {"business":{"name":settings.get("businessName","Sistem Bilgisayar"),"phone":settings.get("phone",""),"email":settings.get("email",""),"address":settings.get("address",""),"subtitle":settings.get("businessSubtitle","")},"serviceNo":rec.get("serviceNo"),"customerName":rec.get("customerName"),"deviceType":rec.get("deviceType"),"deviceModel":rec.get("deviceModel"),"serialNo":rec.get("serialNo"),"complaint":rec.get("complaint"),"status":rec.get("status"),"entryDate":rec.get("entryDate"),"estimatedDate":rec.get("estimatedDate"),"warrantyUntil":rec.get("warrantyUntil"),"totalFee":rec.get("totalFee",0),"paidAmount":rec.get("paidAmount",0),"offers":offers,"history":history}
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.5.2'
+    server_version = 'TeknikServisPro/2.6.0'
 
     def log_message(self, fmt, *args):
         try:
@@ -515,12 +515,14 @@ class PublicPortalHandler(Handler):
         p=urlparse(path).path
         if p in ('/','/portal.html'):
             return str(STATIC_DIR / 'portal.html')
+        if p == '/assets/SistemBilgisayar_2026.png':
+            return str(STATIC_DIR / 'assets' / 'SistemBilgisayar_2026.png')
         return str(STATIC_DIR / '__forbidden__')
     def do_GET(self):
         p=urlparse(self.path).path
         if p == '/api/health': return self.send_json({'ok':True,'version':APP_VERSION,'portalOnly':True})
         if p == '/api/portal': return super().do_GET()
-        if p in ('/','/portal.html'): return SimpleHTTPRequestHandler.do_GET(self)
+        if p in ('/','/portal.html','/assets/SistemBilgisayar_2026.png'): return SimpleHTTPRequestHandler.do_GET(self)
         return self.send_json({'error':'Bu bağlantıda yalnız müşteri portalı kullanılabilir.'},403)
     def do_POST(self):
         if urlparse(self.path).path == '/api/portal/decision': return super().do_POST()

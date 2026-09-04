@@ -1,18 +1,24 @@
-## v2.5.2 — Portal Takip + Telefon Standardı + Sade Servis Arama
-- Müşteri telefonları `05XX XXX XX XX` maskesiyle girilir; kayıt sırasında 05 ile başlayan 11 haneli cep telefonu doğrulaması zorunludur.
-- Veritabanında telefonlar standart `05XXXXXXXXX` biçiminde tutulur; eski geçerli kayıtlar otomatik normalize edilir.
-- Müşteri portalı telefon sorgusu aynı standardı kullanır ve +90 / 10 haneli eski biçimleri normalize eder.
-- Servis Kayıtları ekranındaki durum, ödeme, öncelik ve teknisyen açılır filtreleri kaldırıldı; tek hızlı arama alanı servis no, müşteri, telefon, cihaz, seri no, teknisyen, durum ve öncelikte arar.
-- A5 iki nüshalı servis fişine “Servisinizi Online Takip Edin” alanı eklendi. Güvenli portal token bağlantısından QR kod oluşturulur; portal adresi, servis no ve telefon ayrıca basılır.
-- Varsayılan müşteri portalı adresi `https://takip.sarkislasistem.com` olarak ayarlandı.
+# Teknik Servis Pro v2.6.0 — Kurumsal Kimlik + Portal UX + Login Hotfix
 
-# Teknik Servis Pro v2.5.2
+## Düzeltmeler
+- v2.5.2'de eksik kalan `renderAll()` fonksiyonu geri eklendi. Başarılı giriş sonrası tekrar login ekranına düşme sorunu giderildi.
 
-- Secure Customer Portal eklendi.
-- Her servis kaydı için tahmin edilmesi zor portalToken oluşturulur ve kalıcı veride saklanır.
-- Müşteri takip linkleri `?token=...` kullanır; telefon numarası URL içinde paylaşılmaz.
-- Ayrı portal-only sunucu 127.0.0.1:8973 üzerinde çalışır.
-- 8973 üzerinden yönetim paneli, kullanıcı API'leri, veri API'si ve ayarlar dış erişime kapalıdır.
-- Tailscale Funnel doğrudan 8973 portuna bağlanabilir.
-- Ayarlara “Dış Müşteri Portalı Adresi” eklendi; WhatsApp/SMS hazır mesajları bu adresi kullanır.
-- Eski Servis No + Telefon sorgulaması portal ana sayfasında geriye dönük olarak kullanılabilir.
+## Kurumsal kimlik
+- Sistem Bilgisayar logosu paket içine eklendi ve ayarlarda özel logo yoksa varsayılan olarak kullanılıyor.
+- Login, sol menü, A5 servis fişi ve müşteri portalında kurumsal görünüm birleştirildi.
+- `2003'ten beri · 23. yıl` ibaresi ana logodan bağımsız kurumsal rozet olarak kullanıldı.
+
+## Müşteri portalı
+- Portal başlığı Sistem Bilgisayar kimliğine geçirildi.
+- Teklif/onay kartı mobilde daha görünür hale getirildi.
+- İşletme telefon/e-posta/adres bilgileri servis sonucu altında gösteriliyor.
+- Güvenli token bağlantısı ve Servis No + Telefon yedek sorgulama korunuyor.
+
+## Telefon standardı
+- Yeni müşteri ve servis kaydında telefon 05 ile başlayan 11 haneli cep telefonu standardında tutulur.
+- Portal aynı normalize edilmiş telefon standardını kullanır.
+- Otomatik düzeltilemeyen eski müşteri telefonları Müşteriler ekranında `Telefon düzeltilmeli` olarak işaretlenir.
+
+## Servis kayıtları ve fiş
+- Servis Kayıtları ekranında sade tek arama alanı kullanılır.
+- A5 iki nüshalı fişte güvenli QR, portal adresi, servis no, telefon ve online takip açıklaması bulunur.

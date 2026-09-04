@@ -1,5 +1,5 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.5.2"
+#define MyAppVersion "2.6.0"
 #define MyAppPublisher "Teknik Servis Pro"
 #define MyAppExeName "TeknikServisPro.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\TeknikServisPro
 DefaultGroupName={#MyAppName}
 OutputDir=release
-OutputBaseFilename=TeknikServisPro_v2_5_2_Setup
+OutputBaseFilename=TeknikServisPro_v2_6_0_Setup
 SetupIconFile=app\assets\TeknikServisPro.ico
 UninstallDisplayIcon={app}\TeknikServisPro.exe
 PrivilegesRequired=lowest
@@ -28,7 +28,7 @@ RestartApplications=no
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
-; v2.5.2: Canlı veritabanı kurulum klasöründe değildir.
+; v2.6.0: Canlı veritabanı kurulum klasöründe değildir.
 ; PyInstaller onedir çıktısının tamamını (_internal içindeki seed db.json dahil) kopyala.
 ; Kullanıcı verisi %LOCALAPPDATA%\TeknikServisPro\Data altında korunur.
 Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
