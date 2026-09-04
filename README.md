@@ -1,30 +1,17 @@
-# Teknik Servis Pro v2.4.0
+# Teknik Servis Pro v2.5.0
 
-Python tabanlı yerel teknik servis yönetim uygulaması.
+## CRM / Servis Operasyon Sürümü
 
-## v2.4.0 – Müşteri + Cihaz Yönetimi
+- CRM Dashboard: sağdaki Dikkat Gerektirenler kolonu kaldırıldı; Son Servis Hareketleri tam genişlik.
+- Dashboard altı: Bugünün İşleri, Tahsilat Bekleyenler ve Teknisyen İş Yükü.
+- Servis Operasyon Merkezi: zaman çizelgesi, teklif/onay, stoktan parça, müşteri bildirimi ve portal tek detay ekranında.
+- Teklif revizyonları v1/v2/v3 olarak korunur; müşteri portalından veya servis içinden onay/red alınabilir.
+- Kullanılan parça stoktan otomatik düşer, servis tutarına işlenir; geri alma stok iadesi yapar.
+- WhatsApp/SMS hazır mesaj merkezi ve kopyalama desteği.
+- Müşteri Portalı: servis no + telefon ile durum/teklif/zaman çizelgesi, teklif onay/red.
+- Teknisyen İş Yükü: aktif, bekleyen, geciken, hazır ve açık bakiye dağılımı; teknisyene göre servis filtresi.
+- Kalıcı veri: %LOCALAPPDATA%\TeknikServisPro\Data\db.json.
+- v2.4.x verileri geriye uyumlu şekilde korunur.
 
-- Müşteri artık kalıcı ana kayıttır; ad/telefon/e-posta/adres/not saklanır.
-- Bir müşteriye birden fazla cihaz bağlanabilir.
-- Cihazlara `CIH-000001` biçiminde sabit iç servis kodu verilir.
-- Yeni servis formunda müşteri arama/seçme ve müşterinin mevcut cihazını seçme vardır.
-- Mevcut müşteriye yeni cihaz eklenebilir ve cihaz kartından doğrudan yeni servis açılabilir.
-- Seri No / IMEI çakışması kontrol edilir.
-- Müşteri kartında cihaz ve servis geçmişi, açık bakiye ve son işlem bilgileri görünür.
-- Cihaz kartında durum, model, seri/IMEI ve cihaz notu düzenlenebilir.
-- Önceki servis garantisi devam eden cihaz seçildiğinde uyarı verilir.
-- Eski servis kayıtları ilk açılışta müşteri/cihaz yapısına otomatik ve geriye uyumlu dönüştürülür.
-
-## Veri güvenliği
-Canlı veriler Windows'ta `%LOCALAPPDATA%\TeknikServisPro\Data\db.json` altında tutulur. Program dosyaları güncellense veya kaldırılıp yeniden kurulsa bile bu klasör installer tarafından silinmez.
-
-v2.3.7 ve daha eski sürümden ilk açılışta program, kurulum klasöründeki mevcut `db.json` dosyasını otomatik olarak kalıcı veri klasörüne kopyalar. v2.3.8 verileri aynı kalıcı klasörden doğrudan v2.4.0'a taşınır.
-
-## GitHub Actions
-Actions > `Teknik Servis Pro - Windows Kurulum` > `Run workflow`.
-
-Mobil Seri No / IMEI kamera butonunda iPhone/Safari için fotoğrafla barkod/QR tarama yedeği korunmuştur.
-
-
-## v2.4.0
-Servis zaman çizelgesi, teklif/onay, stoktan parça kullanımı, WhatsApp bilgilendirme ve müşteri portalı eklendi.
+## Build
+GitHub Actions > Windows Installer workflow ile `TeknikServisPro_v2_5_0_Setup.exe` oluşturulur.

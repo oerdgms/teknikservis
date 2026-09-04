@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.4.0'
+APP_VERSION = '2.5.0'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -38,7 +38,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.40,
+        'version': 2.50,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -157,7 +157,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.40
+    normalized['version'] = 2.50
     temp = DB_FILE.with_suffix('.json.tmp')
     payload = json.dumps(normalized, ensure_ascii=False, indent=2)
     with temp.open('w', encoding='utf-8') as f:
@@ -270,7 +270,7 @@ def _public_service(rec, settings):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.4.0'
+    server_version = 'TeknikServisPro/2.5.0'
 
     def log_message(self, fmt, *args):
         try:

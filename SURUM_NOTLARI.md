@@ -1,9 +1,10 @@
-# Teknik Servis Pro v2.4.0
+# Teknik Servis Pro v2.5.0 – Sürüm Notları
 
-## Öncelikli Servis Operasyon Paketi
-- Yapısal servis zaman çizelgesi: durum, teklif, parça, tahsilat ve müşteri bilgilendirme hareketleri.
-- Teklif / müşteri onayı: revizyon geçmişi (v1, v2...), onay bekliyor/onaylandı/reddedildi.
-- Stoktan servise parça kullanımı: stok otomatik düşer, satış ve alış maliyeti servis kaydında saklanır; geri alma stok iadesi yapar.
-- WhatsApp müşteri bilgilendirme: servis durumuna göre hazır mesaj ve portal bağlantısı.
-- Müşteri portalı: servis no + telefon doğrulaması ile durum, teklif ve zaman çizelgesi; teklif onay/red işlemi.
-- v2.3.9 müşteri + cihaz + servis geçmişi ve kalıcı veri mimarisi korunmuştur.
+1. CRM Dashboard yeniden düzenlendi; sağ uyarı kolonu kaldırıldı.
+2. Servis Zaman Çizelgesi operasyon ekranında görünür hale getirildi.
+3. Teklif & Müşteri Onayı revizyon geçmişi ve portal onayı ile birlikte çalışır.
+4. Parça → Stok entegrasyonu servis maliyet/tutar akışına bağlıdır.
+5. WhatsApp/SMS hazır mesaj merkezi eklendi.
+6. Müşteri Portalı menüden ve servis operasyon ekranından erişilebilir.
+7. Teknisyen İş Yükü ekranı ve teknisyen servis filtresi eklendi.
+8. v2.4.x kalıcı veri ve yedek yapısı korunmuştur.
