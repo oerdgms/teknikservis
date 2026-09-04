@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.6.1 — Merkezi Kurumsal Kimlik + Kalıcı Login
+# Teknik Servis Pro v2.6.2 — Merkezi Kurumsal Kimlik + Kalıcı Login
 
 - Login sonrası tekrar giriş ekranına dönme akışı düzeltildi ve başlangıç hataları görünür hale getirildi.
 - Oturumlar `%LOCALAPPDATA%\TeknikServisPro\Data\sessions.json` altında korunur; uygulama yeniden başlasa da geçerli oturum devam eder.
