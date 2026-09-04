@@ -1,11 +1,15 @@
-# Teknik Servis Pro v2.6.3
+# Teknik Servis Pro v2.6.4
 
-Kurumsal Portal + Beni Hatırla + Merkezi Logo sürümü.
+Sistem Bilgisayar için yerel Windows teknik servis yönetim uygulaması.
 
-- Login ekranına **Beni Hatırla (30 gün)** eklendi. İşaretli değilse tarayıcı kapanınca tekrar giriş gerekir.
-- v2.6.3 öncesi kalıcı oturumlar bir kez temizlenir; güncelleme sonrası login ekranı görünür.
-- Müşteri portalı yeni kurumsal tasarıma geçirildi.
-- Logo ve firma bilgileri merkezi Ayarlar > İşletme/Kurumsal Kimlik alanından beslenir.
-- Logo yoksa paket içindeki yüksek çözünürlüklü Sistem Bilgisayar logosu kullanılır.
-- `takip.sarkislasistem.com` varsayılan portal adresidir.
-- Public 8973 portunda yönetim API'leri kapalıdır.
+Bu sürümde müşteri portalındaki servis durumu kartı CRM tarzında yenilendi ve servis fişi baskısı çevre/kâğıt tasarrufu amacıyla A5 yatay tek sayfada iki yan yana nüsha olacak şekilde düzenlendi.
+
+## Baskı
+- Kağıt: A5 (210 × 148 mm)
+- Yön: Yatay
+- Ölçek: %100 / Gerçek boyut
+- Kenar boşluğu: Minimum
+- Tek yaprak: Müşteri + Servis nüshası
+
+## Portal
+Müşteri portalı varsayılan olarak `https://takip.sarkislasistem.com` adresini kullanır. İnternete yalnız portal portu (8973) açılmalıdır; yönetim portu 8972 yalnız yerel/Tailscale erişiminde kalmalıdır.
