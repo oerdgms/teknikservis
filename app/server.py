@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.3.8'
+APP_VERSION = '2.3.9'
 PORT = int(os.environ.get('PORT', '8972'))
 HOST = os.environ.get('HOST', '0.0.0.0')
 
@@ -38,8 +38,8 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.38,
-        'serviceRecords': [], 'cashRecords': [], 'inventory': [], 'users': [],
+        'version': 2.39,
+        'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
             'businessSubtitle': 'Bilgisayar & Donanım Onarım Servisi',
@@ -67,6 +67,8 @@ def _data_score(raw):
         len(raw.get('serviceRecords') or []) * 100
         + len(raw.get('cashRecords') or []) * 20
         + len(raw.get('inventory') or []) * 10
+        + len(raw.get('customers') or []) * 15
+        + len(raw.get('devices') or []) * 15
         + len(raw.get('users') or [])
     )
 
@@ -140,7 +142,7 @@ def normalize_db(raw):
         return base
     raw = raw if isinstance(raw, dict) else {}
     out = {**base, **raw}
-    for key in ('serviceRecords', 'cashRecords', 'inventory', 'users'):
+    for key in ('serviceRecords', 'customers', 'devices', 'cashRecords', 'inventory', 'users'):
         out[key] = raw.get(key) if isinstance(raw.get(key), list) else []
     settings = raw.get('settings') if isinstance(raw.get('settings'), dict) else {}
     out['settings'] = {**base['settings'], **settings}
@@ -155,7 +157,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.38
+    normalized['version'] = 2.39
     temp = DB_FILE.with_suffix('.json.tmp')
     payload = json.dumps(normalized, ensure_ascii=False, indent=2)
     with temp.open('w', encoding='utf-8') as f:
@@ -169,6 +171,8 @@ def write_db(data):
 def db_summary(db):
     return {
         'serviceCount': len(db.get('serviceRecords') or []),
+        'customerCount': len(db.get('customers') or []),
+        'deviceCount': len(db.get('devices') or []),
         'cashCount': len(db.get('cashRecords') or []),
         'inventoryCount': len(db.get('inventory') or []),
         'dataFile': str(DB_FILE),
@@ -239,7 +243,7 @@ def new_session(user):
 
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.3.8'
+    server_version = 'TeknikServisPro/2.3.9'
 
     def log_message(self, fmt, *args):
         try:
@@ -373,7 +377,9 @@ class Handler(SimpleHTTPRequestHandler):
                 actual = db_summary(verified)
                 if (actual['serviceCount'] != expected['serviceCount'] or
                     actual['cashCount'] != expected['cashCount'] or
-                    actual['inventoryCount'] != expected['inventoryCount']):
+                    actual['inventoryCount'] != expected['inventoryCount'] or
+                    actual['customerCount'] != expected['customerCount'] or
+                    actual['deviceCount'] != expected['deviceCount']):
                     return self.send_json({'error':'Geri yükleme disk doğrulaması başarısız', 'expected':expected, 'actual':actual},500)
                 return self.send_json({'success':True, **actual})
             if p == '/api/data':

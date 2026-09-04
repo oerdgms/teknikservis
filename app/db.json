@@ -235,5 +235,11 @@
       "exitDate": ""
     }
   ],
-  "cashRecords": []
+  "cashRecords": [],
+  "version": 2.39,
+  "customers": [],
+  "devices": [],
+  "inventory": [],
+  "users": [],
+  "settings": {}
 }
