@@ -1,9 +1,20 @@
-# Teknik Servis Pro v2.6.2 — Merkezi Kurumsal Kimlik + Kalıcı Login
+# Sürüm Notları — v2.6.3
 
-- Login sonrası tekrar giriş ekranına dönme akışı düzeltildi ve başlangıç hataları görünür hale getirildi.
-- Oturumlar `%LOCALAPPDATA%\TeknikServisPro\Data\sessions.json` altında korunur; uygulama yeniden başlasa da geçerli oturum devam eder.
-- Ayarlar > İşletme ekranına merkezi kurumsal kimlik alanları eklendi: firma adı, logo, kuruluş yılı, kuruluş/yıldönümü gösterimi, slogan, portal başlığı/açıklaması ve servis fişi marka gösterimi.
-- Login, sol menü, müşteri portalı ve servis fişi aynı kurumsal ayarlardan beslenir.
-- Kod içine sabit logo ve 2003/23. yıl metni kaldırıldı. Logo yoksa kırık resim yerine firma adı gösterilir.
-- PyInstaller paketine kurumsal logo asset desteği eklendi.
-- v2.5.2/v2.6.0 telefon standardizasyonu, güvenli portal tokenı, QR servis takibi ve sade servis arama ekranı korunur.
+## Kurumsal müşteri portalı
+- Portal baştan tasarlandı: daha güçlü logo alanı, servis sorgulama kartı, mobil uyum, güven/servis/hız/çözüm ortağı bilgi alanları ve kurumsal alt bölüm.
+- Servis sonucu, teklif onayı/red ve zaman çizelgesi aynı güvenli portal akışında korunur.
+- Portal logo/firma adı/kuruluş yılı/yıldönümü/slogan/başlık/açıklama bilgilerini merkezi işletme ayarlarından alır.
+
+## Login
+- “Beni Hatırla” eklendi.
+- İşaretli: 30 gün kalıcı oturum.
+- İşaretsiz: tarayıcı oturumu; tarayıcı kapanınca tekrar kullanıcı adı/şifre gerekir.
+- Önceki sürümün kalıcı oturumları v2.6.3'e geçişte bir kez geçersiz kılınır.
+
+## Logo
+- Paket varsayılanı yüksek çözünürlüklü, halkasız-e Sistem Bilgisayar logosudur.
+- Ayarlardan yüklenen logo; login, sol menü, portal ve servis fişinde tek merkezden kullanılır.
+
+## Güvenlik
+- Yönetim paneli 8972'de kalır ve internete açılmaz.
+- Public 8973 yalnız müşteri portalını sunar; `/api/data` 403 ile engellenir.

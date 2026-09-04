@@ -4,7 +4,7 @@ from urllib.parse import urlparse, parse_qs
 from http.cookies import SimpleCookie
 from pathlib import Path
 
-APP_VERSION = '2.6.2'
+APP_VERSION = '2.6.3'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -40,7 +40,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.61,
+        'version': 2.63,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -265,7 +265,9 @@ def _save_sessions():
 def cleanup_sessions():
     now = time.time(); changed=False
     for token in list(SESSIONS):
-        if float(SESSIONS[token].get('expires',0)) < now:
+        session = SESSIONS[token]
+        # v2.6.3 öncesi kalıcı cookie oturumlarını bir kez geçersiz kıl; yeni Beni Hatırla tercihi net olsun.
+        if 'remember' not in session or float(session.get('expires',0)) < now:
             SESSIONS.pop(token, None); changed=True
     if changed: _save_sessions()
 
@@ -280,15 +282,16 @@ def session_user(headers):
     token = morsel.value
     session = SESSIONS.get(token)
     if not session: return None
-    session['expires'] = time.time() + SESSION_TTL
+    session['expires'] = time.time() + (30 * 24 * 60 * 60 if session.get('remember') else SESSION_TTL)
     _save_sessions()
     return session['user']
 
 
-def new_session(user):
+def new_session(user, remember=False):
     token = secrets.token_hex(32)
     clean = {k: user.get(k) for k in ('id', 'name', 'username', 'role')}
-    SESSIONS[token] = {'user': clean, 'expires': time.time() + SESSION_TTL}
+    ttl = 30 * 24 * 60 * 60 if remember else SESSION_TTL
+    SESSIONS[token] = {'user': clean, 'expires': time.time() + ttl, 'remember': bool(remember)}
     _save_sessions()
     return token, clean
 
@@ -333,7 +336,7 @@ def _branding(settings):
         "name": settings.get("businessName", "Sistem Bilgisayar"),
         "subtitle": settings.get("businessSubtitle", ""),
         "phone": settings.get("phone", ""), "email": settings.get("email", ""), "address": settings.get("address", ""),
-        "logo": settings.get("logo", ""), "foundedYear": year, "showFoundedYear": bool(settings.get("showFoundedYear", True)),
+        "logo": settings.get("logo") or "/assets/SistemBilgisayar_2026.png", "foundedYear": year, "showFoundedYear": bool(settings.get("showFoundedYear", True)),
         "showAnniversary": bool(settings.get("showAnniversary", True)), "anniversary": anniversary,
         "slogan": settings.get("slogan", ""), "portalTitle": settings.get("portalTitle", "Teknik Servis Takip"),
         "portalDescription": settings.get("portalDescription", "Servis durumunuzu güvenli şekilde takip edin"),
@@ -355,7 +358,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.2'
+    server_version = 'TeknikServisPro/2.6.3'
 
     def log_message(self, fmt, *args):
         try:
@@ -456,15 +459,19 @@ class Handler(SimpleHTTPRequestHandler):
                 user = {'id': int(time.time()*1000), 'name': name, 'username': username, 'role': 'Yönetici', 'active': True,
                         'passwordHash': hash_password(password), 'createdAt': time.strftime('%Y-%m-%dT%H:%M:%S')}
                 db['users'].append(user); backup_current_db(); write_db(db)
-                token, clean = new_session(user)
-                return self.send_json({'success': True, 'user': clean}, headers={'Set-Cookie': f'tsp_session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200'})
+                remember = bool(body.get('remember', False))
+                token, clean = new_session(user, remember)
+                cookie = f'tsp_session={token}; HttpOnly; SameSite=Lax; Path=/' + ('; Max-Age=2592000' if remember else '')
+                return self.send_json({'success': True, 'user': clean}, headers={'Set-Cookie': cookie})
             if p == '/api/auth/login':
                 db = read_db(); username = str(body.get('username','')).strip().casefold()
                 user = next((x for x in db['users'] if x.get('active',True) is not False and str(x.get('username','')).casefold()==username), None)
                 if not user or not verify_password(body.get('password',''), user.get('passwordHash','')):
                     return self.send_json({'error': 'Kullanıcı adı veya şifre hatalı'}, 401)
-                token, clean = new_session(user)
-                return self.send_json({'success': True, 'user': clean}, headers={'Set-Cookie': f'tsp_session={token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200'})
+                remember = bool(body.get('remember', False))
+                token, clean = new_session(user, remember)
+                cookie = f'tsp_session={token}; HttpOnly; SameSite=Lax; Path=/' + ('; Max-Age=2592000' if remember else '')
+                return self.send_json({'success': True, 'user': clean}, headers={'Set-Cookie': cookie})
             if p == '/api/auth/logout':
                 cookie = SimpleCookie(); cookie.load(self.headers.get('Cookie',''))
                 if cookie.get('tsp_session'): SESSIONS.pop(cookie['tsp_session'].value, None); _save_sessions()
