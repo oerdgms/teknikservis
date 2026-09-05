@@ -28,7 +28,7 @@ RestartApplications=no
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
 [Files]
-; v2.6.4 Hotfix2: Canlı veritabanı kurulum klasöründe değildir.
+; v2.6.4 Hotfix3: Canlı veritabanı kurulum klasöründe değildir.
 ; PyInstaller onedir çıktısının tamamını (_internal içindeki seed db.json dahil) kopyala.
 ; Kullanıcı verisi %LOCALAPPDATA%\TeknikServisPro\Data altında korunur.
 Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
