@@ -1,10 +1,12 @@
 import os, sys, json, time, secrets, hashlib, hmac, shutil, threading, webbrowser, traceback
 from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import urlparse, parse_qs, urlencode
 from http.cookies import SimpleCookie
+from urllib.request import Request, urlopen
+from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.4'
+APP_VERSION = '2.6.4-hf1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -40,7 +42,7 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.63,
+        'version': 2.64,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
@@ -49,7 +51,9 @@ def empty_db():
             'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue', 'portalPublicUrl': 'https://takip.sarkislasistem.com',
             'foundedYear': 2003, 'showFoundedYear': True, 'showAnniversary': True,
             'slogan': 'Teknoloji • Satış • Servis • Çözüm Ortağınız', 'portalTitle': 'Teknik Servis Takip',
-            'portalDescription': 'Servis durumunuzu güvenli şekilde takip edin', 'showBrandOnReceipt': True
+            'portalDescription': 'Servis durumunuzu güvenli şekilde takip edin', 'showBrandOnReceipt': True,
+            'smsEnabled': False, 'smsProvider': 'iletimerkezi', 'smsSender': '',
+            'smsApiKey': '', 'smsApiHash': '', 'smsUsername': '', 'smsPassword': ''
         }
     }
 
@@ -328,6 +332,81 @@ def _portal_service(db, service_no, phone):
     return None
 
 
+def _sms_phone(value):
+    digits = ''.join(ch for ch in str(value or '') if ch.isdigit())
+    if digits.startswith('0090'): digits = digits[2:]
+    if digits.startswith('90') and len(digits) == 12: return digits
+    if digits.startswith('0') and len(digits) == 11: return '90' + digits[1:]
+    if len(digits) == 10 and digits.startswith('5'): return '90' + digits
+    return ''
+
+
+def _http_json(url, payload, timeout=18):
+    data = json.dumps(payload, ensure_ascii=False).encode('utf-8')
+    req = Request(url, data=data, headers={'Content-Type':'application/json','User-Agent':'TeknikServisPro/'+APP_VERSION}, method='POST')
+    try:
+        with urlopen(req, timeout=timeout) as resp:
+            raw = resp.read().decode('utf-8', 'replace')
+            try: return resp.status, json.loads(raw)
+            except Exception: return resp.status, {'raw': raw}
+    except HTTPError as e:
+        raw = e.read().decode('utf-8', 'replace')
+        try: body = json.loads(raw)
+        except Exception: body = {'raw': raw}
+        return e.code, body
+
+
+def _send_sms(settings, phone, message):
+    if not settings.get('smsEnabled'):
+        raise ValueError('SMS gönderimi Ayarlar > SMS bölümünde etkin değil.')
+    number = _sms_phone(phone)
+    if not number:
+        raise ValueError('Geçerli bir Türkiye cep telefonu numarası gerekli.')
+    message = str(message or '').strip()
+    if not message:
+        raise ValueError('SMS mesajı boş olamaz.')
+    if len(message) > 1071:
+        raise ValueError('SMS mesajı 1071 karakteri aşamaz.')
+    provider = str(settings.get('smsProvider') or '').lower()
+    sender = str(settings.get('smsSender') or '').strip()
+    if not sender:
+        raise ValueError('SMS gönderici başlığı tanımlı değil.')
+
+    if provider == 'iletimerkezi':
+        key = str(settings.get('smsApiKey') or '').strip(); api_hash = str(settings.get('smsApiHash') or '').strip()
+        if not key or not api_hash:
+            raise ValueError('İleti Merkezi API Key / Hash eksik.')
+        payload = {'request': {'authentication': {'key': key, 'hash': api_hash}, 'order': {'sender': sender, 'iys': '0', 'message': {'text': message, 'receipents': {'number': [number]}}}}}
+        status, body = _http_json('https://api.iletimerkezi.com/v1/send-sms/json', payload)
+        st = ((body.get('response') or {}).get('status') or {}) if isinstance(body, dict) else {}
+        code = int(st.get('code') or status or 0)
+        if status >= 400 or code >= 400:
+            raise ValueError(st.get('message') or (body.get('error') if isinstance(body,dict) else '') or f'İleti Merkezi hatası ({code or status})')
+        order_id = str((((body.get('response') or {}).get('order') or {}).get('id') or ''))
+        return {'provider':'İleti Merkezi','orderId':order_id,'rawCode':code}
+
+    if provider == 'netgsm':
+        user = str(settings.get('smsUsername') or '').strip(); password = str(settings.get('smsPassword') or '').strip()
+        if not user or not password:
+            raise ValueError('Netgsm API kullanıcı adı / şifre eksik.')
+        # Netgsm standard GET gateway. API alt kullanıcısı + onaylı msgheader gerekir.
+        params = urlencode({'usercode':user,'password':password,'gsmno':number,'message':message,'msgheader':sender})
+        url = 'https://api.netgsm.com.tr/sms/send/get/?' + params
+        req = Request(url, headers={'User-Agent':'TeknikServisPro/'+APP_VERSION})
+        try:
+            with urlopen(req, timeout=18) as resp: raw = resp.read().decode('utf-8','replace').strip()
+        except HTTPError as e:
+            raw = e.read().decode('utf-8','replace').strip(); raise ValueError(f'Netgsm HTTP hatası {e.code}: {raw[:120]}')
+        except URLError as e:
+            raise ValueError('Netgsm bağlantı hatası: ' + str(e.reason))
+        parts = raw.split()
+        if not raw.startswith('00'):
+            raise ValueError('Netgsm gönderim hatası: ' + raw[:160])
+        return {'provider':'Netgsm','orderId':parts[1] if len(parts)>1 else '', 'reference':raw}
+
+    raise ValueError('Desteklenmeyen SMS servis sağlayıcısı.')
+
+
 def _branding(settings):
     year = int(settings.get("foundedYear") or 0)
     current_year = int(time.strftime("%Y"))
@@ -358,7 +437,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.4'
+    server_version = 'TeknikServisPro/2.6.4-hf1'
 
     def log_message(self, fmt, *args):
         try:
@@ -531,6 +610,15 @@ class Handler(SimpleHTTPRequestHandler):
                     actual['deviceCount'] != expected['deviceCount']):
                     return self.send_json({'error':'Geri yükleme disk doğrulaması başarısız', 'expected':expected, 'actual':actual},500)
                 return self.send_json({'success':True, **actual})
+            if p == '/api/sms/send':
+                user = self.auth()
+                if not user: return
+                db = read_db()
+                try:
+                    result = _send_sms(db.get('settings') or {}, body.get('phone'), body.get('message'))
+                except ValueError as e:
+                    return self.send_json({'error': str(e)}, 400)
+                return self.send_json({'success':True, **result})
             if p == '/api/data':
                 if not self.auth(): return
                 current=read_db(); nextdb=normalize_db(body); nextdb['users']=current['users']; backup_current_db(); write_db(nextdb)
