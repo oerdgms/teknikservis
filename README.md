@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.6.4 Hotfix1
+# Teknik Servis Pro v2.6.4 Hotfix2
 
 Sistem Bilgisayar için yerel Windows teknik servis yönetim uygulaması.
 

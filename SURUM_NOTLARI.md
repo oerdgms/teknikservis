@@ -1,4 +1,4 @@
-# Sürüm Notları — v2.6.4 Hotfix1
+# Sürüm Notları — v2.6.4 Hotfix2
 
 ## Müşteri Portalı
 - Servis durumu rozeti CRM görünümüne yaklaştırıldı.

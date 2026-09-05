@@ -113,7 +113,7 @@ jobs:
       - name: Kurulum dosyasını yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.6.4-Hotfix1-Windows-Setup
+          name: TeknikServisPro-v2.6.4-Hotfix2-Windows-Setup
           path: |
             release/TeknikServisPro_v2_6_4_Setup.exe
             release/SHA256.txt
