@@ -1,11 +1,13 @@
-# Teknik Servis Pro v2.6.4 Hotfix3
+# Teknik Servis Pro v2.6.5 Hotfix4
 
-## A5 Final Baskı Hotfix
-- Fiziksel A5 yatay (210 x 148 mm) tek yaprak.
-- Müşteri + Servis nüshası yan yana.
-- Nüshalar büyütüldü; QR, yazılar ve boşluklar gerçek A5 alanını dolduracak şekilde yeniden ölçeklendi.
-- Ortada 1 mm kesim hattı.
-- SMS altyapısı ve önceki Hotfix özellikleri korunur.
+Kaynak paket. Windows kurulum dosyası GitHub Actions + Inno Setup ile üretilir.
 
-### Baskı
-A5 / Manzara / %100 / Kenar boşluğu Yok / Üstbilgi ve Altbilgi kapalı.
+## Portlar
+- Yönetim: `127.0.0.1:8972`
+- Müşteri portalı / Cloudflare Tunnel: `127.0.0.1:8973`
+
+## Canlı veri
+Canlı işletme verisi kaynak/kurulum klasöründe tutulmaz. Windows'ta `%LOCALAPPDATA%\TeknikServisPro\Data` kullanılır. Kaynak içindeki `app/db.json` yalnızca temiz ilk-kurulum seed dosyasıdır.
+
+## Otomatik başlatma
+Kurulumdaki “Windows oturumu açıldığında Teknik Servis Pro'yu otomatik başlat” seçeneği varsayılan olarak açıktır. Başlangıç kısayolu `--background` parametresiyle çalışır ve tarayıcı açmaz.

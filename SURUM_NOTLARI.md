@@ -1,8 +1,9 @@
-# Sürüm Notları — v2.6.4 Hotfix3
+# Teknik Servis Pro v2.6.5 Hotfix4
 
-- A5 baskı gerçek 210×148 mm alana sabitlendi.
-- İki nüsha yaklaşık yarım A5 genişliğinde ve tam yüksekliğe yakın kullanılacak şekilde büyütüldü.
-- QR kod 19 mm, başlık ve içerik fontları büyütüldü.
-- Gereksiz alt boşluk azaltıldı.
-- Tek orta kesim çizgisi korundu.
-- SMS altyapısı korunmuştur.
+- Müşteri portalında logo artık `https://sarkislasistem.com` ana sayfasına döner.
+- Portalda ayrıca görünür **Siteye Dön** butonu eklendi.
+- Kurumsal site adresi Ayarlar > İşletme bölümünden değiştirilebilir.
+- Kurulumda Windows oturum açılışında arka planda otomatik başlatma seçeneği eklendi (varsayılan açık).
+- Otomatik başlangıç tarayıcı penceresi açmaz; masaüstü kısayolu normal şekilde yönetim ekranını açar.
+- Kaynak paketten `__pycache__`/`.pyc` kalıntıları temizlendi.
+- GitHub kaynak paketindeki seed `db.json` müşteri/servis kayıtlarından arındırıldı; canlı veriler `%LOCALAPPDATA%\TeknikServisPro\Data` altında korunmaya devam eder.

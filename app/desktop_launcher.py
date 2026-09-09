@@ -21,4 +21,4 @@ if __name__ == "__main__":
     if "--shutdown" in sys.argv:
         request_shutdown()
         raise SystemExit(0)
-    server.main()
+    server.main(background="--background" in sys.argv)

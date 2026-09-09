@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.4-hf1'
+APP_VERSION = '2.6.5-hf4'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -42,13 +42,14 @@ _STORAGE_READY = False
 
 def empty_db():
     return {
-        'version': 2.64,
+        'version': 2.65,
         'serviceRecords': [], 'customers': [], 'devices': [], 'cashRecords': [], 'inventory': [], 'users': [],
         'settings': {
             'businessName': 'Sistem Bilgisayar Teknik Destek',
             'businessSubtitle': 'Bilgisayar & Donanım Onarım Servisi',
             'phone': '', 'email': '', 'address': '', 'taxOffice': '', 'taxNo': '',
             'defaultWarrantyDays': 90, 'logo': '', 'theme': 'blue', 'portalPublicUrl': 'https://takip.sarkislasistem.com',
+            'corporateSiteUrl': 'https://sarkislasistem.com',
             'foundedYear': 2003, 'showFoundedYear': True, 'showAnniversary': True,
             'slogan': 'Teknoloji • Satış • Servis • Çözüm Ortağınız', 'portalTitle': 'Teknik Servis Takip',
             'portalDescription': 'Servis durumunuzu güvenli şekilde takip edin', 'showBrandOnReceipt': True,
@@ -157,6 +158,8 @@ def normalize_db(raw):
     out['settings'] = {**base['settings'], **settings}
     if not out['settings'].get('portalPublicUrl'):
         out['settings']['portalPublicUrl'] = 'https://takip.sarkislasistem.com'
+    if not out['settings'].get('corporateSiteUrl'):
+        out['settings']['corporateSiteUrl'] = 'https://sarkislasistem.com'
     return out
 
 
@@ -419,6 +422,7 @@ def _branding(settings):
         "showAnniversary": bool(settings.get("showAnniversary", True)), "anniversary": anniversary,
         "slogan": settings.get("slogan", ""), "portalTitle": settings.get("portalTitle", "Teknik Servis Takip"),
         "portalDescription": settings.get("portalDescription", "Servis durumunuzu güvenli şekilde takip edin"),
+        "corporateSiteUrl": settings.get("corporateSiteUrl") or "https://sarkislasistem.com",
         "showBrandOnReceipt": bool(settings.get("showBrandOnReceipt", True))
     }
 
@@ -437,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.4-hf1'
+    server_version = 'TeknikServisPro/2.6.5-hf4'
 
     def log_message(self, fmt, *args):
         try:
@@ -693,15 +697,18 @@ def port_already_running():
     except Exception: return False
 
 
-def main():
+def main(background=False):
     ensure_storage()
     if port_already_running():
-        webbrowser.open(f'http://127.0.0.1:{PORT}', new=1); return
+        if not background:
+            webbrowser.open(f'http://127.0.0.1:{PORT}', new=1)
+        return
     try:
         server=ThreadingHTTPServer((HOST, PORT), Handler); server.daemon_threads = True
         public_server=ThreadingHTTPServer(('127.0.0.1', PUBLIC_PORT), PublicPortalHandler); public_server.daemon_threads=True
         threading.Thread(target=public_server.serve_forever, daemon=True).start()
-        threading.Thread(target=open_browser_later, daemon=True).start()
+        if not background:
+            threading.Thread(target=open_browser_later, daemon=True).start()
         try: server.serve_forever()
         finally:
             public_server.shutdown(); public_server.server_close(); server.server_close()

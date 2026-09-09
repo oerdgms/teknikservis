@@ -1,5 +1,5 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.6.4.1"
+#define MyAppVersion "2.6.5.0"
 #define MyAppPublisher "Teknik Servis Pro"
 #define MyAppExeName "TeknikServisPro.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\TeknikServisPro
 DefaultGroupName={#MyAppName}
 OutputDir=release
-OutputBaseFilename=TeknikServisPro_v2_6_4_Setup
+OutputBaseFilename=TeknikServisPro_v2_6_5_Setup
 SetupIconFile=app\assets\TeknikServisPro.ico
 UninstallDisplayIcon={app}\TeknikServisPro.exe
 PrivilegesRequired=lowest
@@ -27,8 +27,11 @@ RestartApplications=no
 [Languages]
 Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 
+[Tasks]
+Name: "autostart"; Description: "Windows oturumu açıldığında Teknik Servis Pro'yu otomatik başlat"; GroupDescription: "Başlangıç seçenekleri:"; Flags: checkedonce
+
 [Files]
-; v2.6.4 Hotfix3: Canlı veritabanı kurulum klasöründe değildir.
+; v2.6.5 Hotfix4: Canlı veritabanı kurulum klasöründe değildir.
 ; PyInstaller onedir çıktısının tamamını (_internal içindeki seed db.json dahil) kopyala.
 ; Kullanıcı verisi %LOCALAPPDATA%\TeknikServisPro\Data altında korunur.
 Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
@@ -36,6 +39,7 @@ Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recurse
 [Icons]
 Name: "{autodesktop}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; WorkingDir: "{app}"
 Name: "{userprograms}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; WorkingDir: "{app}"
+Name: "{userstartup}\Teknik Servis Pro"; Filename: "{app}\TeknikServisPro.exe"; Parameters: "--background"; WorkingDir: "{app}"; Tasks: autostart
 
 [Run]
 Filename: "{app}\TeknikServisPro.exe"; Description: "Teknik Servis Pro'yu başlat"; Flags: nowait postinstall skipifsilent
