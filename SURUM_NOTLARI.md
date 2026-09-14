@@ -1,3 +1,12 @@
+# v2.6.5 Hotfix5.1 — QA / QR Güvenlik ve Build Düzeltmeleri
+
+- QR doğrudan takipte `portalToken` tekrar birincil yöntem yapıldı; müşteri telefonu URL içinde taşınmıyor.
+- Token eksikse geriye uyumluluk için Servis No + Telefon sorgusuna düşer.
+- GitHub Actions health kontrolündeki eski `2.6.5-hf4` beklentisi düzeltildi.
+- HTTP server sürüm etiketi ve kaynak dokümantasyonu güncellendi.
+- DB `version` yazımındaki 2.60 / 2.65 tutarsızlığı düzeltildi.
+- Kaynak ZIP içindeki `__pycache__`/`.pyc` kalıntıları temizlendi.
+
 # v2.6.5 Hotfix5 — QR Doğrudan Servis Takip
 
 - Servis fişi QR bağlantısı kalıcı servis no + müşteri telefonu sorgusuna geçirildi.

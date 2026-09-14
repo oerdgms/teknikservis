@@ -51,6 +51,13 @@ jobs:
           python -m py_compile app/server.py
           python -m py_compile app/desktop_launcher.py
 
+      - name: Sürüm ve QR kaynak doğrulaması
+        shell: pwsh
+        run: |
+          python -c "import pathlib; s=pathlib.Path('app/server.py').read_text(encoding='utf-8'); assert '2.6.5-hf5.1' in s"
+          python -c "import pathlib; s=pathlib.Path('app/index.html').read_text(encoding='utf-8'); assert 'portal.html?token=' in s; assert 'r.portalToken' in s"
+          python -c "import pathlib; s=pathlib.Path('.github/workflows/windows-installer.yml').read_text(encoding='utf-8'); assert '2.6.5-hf5.1' in s"
+
       - name: Windows uygulamasını oluştur
         shell: pwsh
         run: |
@@ -79,7 +86,7 @@ jobs:
                 $response = Invoke-RestMethod `
                   -Uri "http://127.0.0.1:8972/api/health" `
                   -TimeoutSec 2
-                if ($response.ok -eq $true -and $response.version -eq "2.6.5-hf4") {
+                if ($response.ok -eq $true -and $response.version -eq "2.6.5-hf5.1") {
                   $ready = $true
                   break
                 }
@@ -114,7 +121,7 @@ jobs:
       - name: Kurulum dosyasını yükle
         uses: actions/upload-artifact@v4
         with:
-          name: TeknikServisPro-v2.6.5-Hotfix4-Windows-Setup
+          name: TeknikServisPro-v2.6.5-Hotfix5.1-Windows-Setup
           path: |
             release/TeknikServisPro_v2_6_5_Setup.exe
             release/SHA256.txt

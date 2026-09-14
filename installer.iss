@@ -31,7 +31,7 @@ Name: "turkish"; MessagesFile: "compiler:Languages\Turkish.isl"
 Name: "autostart"; Description: "Windows oturumu açıldığında Teknik Servis Pro'yu otomatik başlat"; GroupDescription: "Başlangıç seçenekleri:"; Flags: checkedonce
 
 [Files]
-; v2.6.5 Hotfix4: Canlı veritabanı kurulum klasöründe değildir.
+; v2.6.5 Hotfix5.1: Canlı veritabanı kurulum klasöründe değildir.
 ; PyInstaller onedir çıktısının tamamını (_internal içindeki seed db.json dahil) kopyala.
 ; Kullanıcı verisi %LOCALAPPDATA%\TeknikServisPro\Data altında korunur.
 Source: "dist\TeknikServisPro\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs

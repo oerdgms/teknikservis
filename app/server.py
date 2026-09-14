@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.5-hf5'
+APP_VERSION = '2.6.5-hf5.1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -184,7 +184,7 @@ def read_db():
 def write_db(data):
     ensure_storage()
     normalized = normalize_db(data)
-    normalized['version'] = 2.60
+    normalized['version'] = 2.65
     for customer in normalized.get('customers') or []:
         phone = _norm_phone(customer.get('phone'))
         if _valid_tr_mobile(phone):
@@ -441,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.5-hf4'
+    server_version = 'TeknikServisPro/2.6.5-hf5.1'
 
     def log_message(self, fmt, *args):
         try:
