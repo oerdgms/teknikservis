@@ -1,3 +1,11 @@
+# v2.6.5 Hotfix5 — QR Doğrudan Servis Takip
+
+- Servis fişi QR bağlantısı kalıcı servis no + müşteri telefonu sorgusuna geçirildi.
+- QR okutulduğunda müşteri servis no/telefon yazmadan ilgili servis kaydı otomatik açılır.
+- Eski/yenilenmiş portalToken nedeniyle QR'ın boş takip ekranında kalması engellendi.
+- Normal takip.sarkislasistem.com girişi manuel Servis No + Telefon sorgusu olarak korunur.
+- Canlı data/db ve kullanıcı verilerini değiştiren bir işlem eklenmedi.
+
 # Teknik Servis Pro v2.6.5 Hotfix4
 
 - Müşteri portalında logo artık `https://sarkislasistem.com` ana sayfasına döner.

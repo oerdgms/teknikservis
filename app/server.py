@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.5-hf4'
+APP_VERSION = '2.6.5-hf5'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
