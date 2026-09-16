@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.5-hf5.1'
+APP_VERSION = '2.6.5-hf5.2'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -441,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.5-hf5.1'
+    server_version = 'TeknikServisPro/2.6.5-hf5.2'
 
     def log_message(self, fmt, *args):
         try:
@@ -632,6 +632,24 @@ class Handler(SimpleHTTPRequestHandler):
         except Exception as e:
             log_exception(e); return self.send_json({'error':'Sunucu hatası'},500)
 
+    def do_DELETE(self):
+        p = urlparse(self.path).path
+        try:
+            if not p.startswith('/api/services/'):
+                return self.send_json({'error':'Bulunamadı'},404)
+            if not self.auth(): return
+            service_id = p.rsplit('/',1)[-1]
+            db = read_db()
+            rec = next((x for x in db.get('serviceRecords',[]) if str(x.get('id')) == str(service_id)), None)
+            if not rec:
+                return self.send_json({'error':'Servis kaydı bulunamadı'},404)
+            # Servis kaydını sil; müşteri/cihaz ana kartlarını geçmiş bütünlüğü için koru.
+            db['serviceRecords'] = [x for x in db.get('serviceRecords',[]) if str(x.get('id')) != str(service_id)]
+            backup_current_db(); write_db(db)
+            return self.send_json({'success':True,'deletedServiceNo':rec.get('serviceNo',''), **db_summary(db)})
+        except Exception as e:
+            log_exception(e); return self.send_json({'error':'Sunucu hatası'},500)
+
     def do_PATCH(self):
         p=urlparse(self.path).path
         try:
@@ -670,6 +688,9 @@ class PublicPortalHandler(Handler):
     def do_POST(self):
         if urlparse(self.path).path == '/api/portal/decision': return super().do_POST()
         return self.send_json({'error':'Bu bağlantıda yalnız müşteri portalı kullanılabilir.'},403)
+    def do_DELETE(self):
+        return self.send_json({'error':'Yetkisiz'},403)
+
     def do_PATCH(self):
         return self.send_json({'error':'Yetkisiz'},403)
 
