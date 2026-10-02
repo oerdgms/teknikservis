@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.6.5 Hotfix5.2
+# Teknik Servis Pro v2.6.6 CRM1
 
 Kaynak paket. Windows kurulum dosyası GitHub Actions + Inno Setup ile üretilir.
 
@@ -18,3 +18,11 @@ Kurulumdaki “Windows oturumu açıldığında Teknik Servis Pro'yu otomatik ba
 - GitHub Actions health sürüm kontrolü Hotfix5.2 ile eşleştirildi.
 - Veritabanı sürüm yazımı 2.65 ile tutarlı hale getirildi.
 - `__pycache__` ve `.pyc` kalıntıları kaynak paketinden çıkarıldı.
+
+
+## v2.6.6 CRM1
+- Yeni Servis Kaydı ekranı CRM akışına dönüştürüldü.
+- Belirgin müşteri arama ve Yeni Müşteri aksiyonu eklendi.
+- Müşteri seçilince kayıtlı ürün/cihazlar kart olarak gösterilir.
+- Mevcut cihaz seçme veya yeni ürün/cihaz ekleme akışı eklendi.
+- Mevcut servis, SMS ve A5 baskı altyapısı korunmuştur.

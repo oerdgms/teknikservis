@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.5-hf5.2'
+APP_VERSION = '2.6.6-crm1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -441,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.5-hf5.2'
+    server_version = 'TeknikServisPro/2.6.6-crm1'
 
     def log_message(self, fmt, *args):
         try:

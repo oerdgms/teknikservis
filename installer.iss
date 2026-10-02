@@ -1,5 +1,5 @@
 #define MyAppName "Teknik Servis Pro"
-#define MyAppVersion "2.6.5.0"
+#define MyAppVersion "2.6.6.0"
 #define MyAppPublisher "Teknik Servis Pro"
 #define MyAppExeName "TeknikServisPro.exe"
 
@@ -11,7 +11,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={localappdata}\Programs\TeknikServisPro
 DefaultGroupName={#MyAppName}
 OutputDir=release
-OutputBaseFilename=TeknikServisPro_v2_6_5_Setup
+OutputBaseFilename=TeknikServisPro_v2_6_6_Setup
 SetupIconFile=app\assets\TeknikServisPro.ico
 UninstallDisplayIcon={app}\TeknikServisPro.exe
 PrivilegesRequired=lowest

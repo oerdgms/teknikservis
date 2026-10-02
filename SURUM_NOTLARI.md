@@ -1,3 +1,12 @@
+# v2.6.6 CRM1 — Müşteri / Ürün / Servis Kabul Akışı
+
+- Yeni servis ekranı 4 adımlı CRM görsel akışına geçirildi.
+- Müşteri arama ve yeni müşteri butonu belirginleştirildi.
+- Seçilen müşterinin cihazları kart olarak listeleniyor.
+- Yeni Ürün / Cihaz Ekle aksiyonu eklendi.
+- Servis bilgileri ve ücret alanları mevcut veri modeliyle uyumlu tutuldu.
+- A5 baskı ve SMS altyapısına dokunulmadı.
+
 # v2.6.5 Hotfix5.2 — QA / QR Güvenlik ve Build Düzeltmeleri
 
 - QR doğrudan takipte `portalToken` tekrar birincil yöntem yapıldı; müşteri telefonu URL içinde taşınmıyor.
