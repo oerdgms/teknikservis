@@ -1,4 +1,4 @@
-# v2.6.6 CRM1 — Müşteri / Ürün / Servis Kabul Akışı
+# v2.6.6 CRM1 Hotfix1 — Müşteri / Ürün / Servis Kabul Akışı
 
 - Yeni servis ekranı 4 adımlı CRM görsel akışına geçirildi.
 - Müşteri arama ve yeni müşteri butonu belirginleştirildi.
@@ -40,3 +40,11 @@
 - Performans: menüler arası geçişte tüm veritabanını tekrar indirme kaldırıldı.
 - Çoklu cihaz senkronu: uygulama görünürken 10 sn arka plan yenileme; pencereye dönünce hızlı senkron.
 - Servis formu açıkken arka plan yenileme yapılmaz; girilmekte olan veri korunur.
+
+
+## Hotfix1 — Servis düzenleme
+- Mevcut servis kaydında ana buton `Değişiklikleri Kaydet` olur.
+- Düzenleme yeni servis oluşturmaz; servis ID ve servis numarası korunur.
+- Güncelleme atomik `/api/services/<id>` PATCH uç noktasıyla yapılır.
+- Müşteri/cihaz ana kartı değişiklikleri aynı işlemde kaydedilir.
+- Güncelleme hatası artık gerçek sunucu mesajını kullanıcıya gösterir.

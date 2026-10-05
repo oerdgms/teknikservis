@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.6-crm1'
+APP_VERSION = '2.6.6-crm1-hf1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -441,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.6-crm1'
+    server_version = 'TeknikServisPro/2.6.6-crm1-hf1'
 
     def log_message(self, fmt, *args):
         try:
@@ -653,6 +653,28 @@ class Handler(SimpleHTTPRequestHandler):
     def do_PATCH(self):
         p=urlparse(self.path).path
         try:
+            if p.startswith('/api/services/'):
+                if not self.auth(): return
+                service_id=p.rsplit('/',1)[-1]; body=self.read_json(); db=read_db()
+                idx=next((i for i,x in enumerate(db.get('serviceRecords',[])) if str(x.get('id'))==str(service_id)),None)
+                if idx is None: return self.send_json({'error':'Servis kaydı bulunamadı'},404)
+                incoming=body.get('service') if isinstance(body.get('service'),dict) else {}
+                # Kimlik ve servis numarası URL ile bulunan mevcut kayıttan korunur.
+                current=db['serviceRecords'][idx]
+                incoming['id']=current.get('id'); incoming['serviceNo']=current.get('serviceNo')
+                customer=body.get('customer') if isinstance(body.get('customer'),dict) else None
+                device=body.get('device') if isinstance(body.get('device'),dict) else None
+                if customer:
+                    ci=next((i for i,x in enumerate(db.get('customers',[])) if str(x.get('id'))==str(customer.get('id'))),None)
+                    if ci is not None: db['customers'][ci]=customer
+                if device:
+                    di=next((i for i,x in enumerate(db.get('devices',[])) if str(x.get('id'))==str(device.get('id'))),None)
+                    if di is not None: db['devices'][di]=device
+                db['serviceRecords'][idx]=incoming
+                backup_current_db(); write_db(db)
+                verified=read_db(); saved=next((x for x in verified.get('serviceRecords',[]) if str(x.get('id'))==str(service_id)),None)
+                if not saved: return self.send_json({'error':'Güncelleme disk doğrulaması başarısız'},500)
+                return self.send_json({'success':True,'serviceNo':saved.get('serviceNo'), **db_summary(verified)})
             if not p.startswith('/api/users/'):
                 return self.send_json({'error':'Bulunamadı'},404)
             current=self.auth(admin=True)
