@@ -1,4 +1,4 @@
-# v2.6.6 CRM1 Hotfix1 — Müşteri / Ürün / Servis Kabul Akışı
+# v2.6.6 CRM1 Hotfix2 — Müşteri / Ürün / Servis Kabul Akışı
 
 - Yeni servis ekranı 4 adımlı CRM görsel akışına geçirildi.
 - Müşteri arama ve yeni müşteri butonu belirginleştirildi.

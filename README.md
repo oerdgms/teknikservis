@@ -1,4 +1,4 @@
-# Teknik Servis Pro v2.6.6 CRM1 Hotfix1
+# Teknik Servis Pro v2.6.6 CRM1 Hotfix2
 
 Kaynak paket. Windows kurulum dosyası GitHub Actions + Inno Setup ile üretilir.
 
