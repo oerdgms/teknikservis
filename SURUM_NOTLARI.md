@@ -1,4 +1,4 @@
-# v2.6.6 CRM1 Hotfix2 — Müşteri / Ürün / Servis Kabul Akışı
+# v2.6.6 CRM1 Hotfix3 — Müşteri / Ürün / Servis Kabul Akışı
 
 - Yeni servis ekranı 4 adımlı CRM görsel akışına geçirildi.
 - Müşteri arama ve yeni müşteri butonu belirginleştirildi.
@@ -48,3 +48,11 @@
 - Güncelleme atomik `/api/services/<id>` PATCH uç noktasıyla yapılır.
 - Müşteri/cihaz ana kartı değişiklikleri aynı işlemde kaydedilir.
 - Güncelleme hatası artık gerçek sunucu mesajını kullanıcıya gösterir.
+
+## Hotfix3 — Mükerrer servis kaydı koruması
+- Yeni servis kaydında ilk tıklamada Kaydediliyor… durumu ve buton kilidi.
+- Her yeni servis oluşturma isteğine benzersiz işlem kimliği (idempotency key) atanır.
+- Ağ kopması/tekrar gönderim halinde aynı işlem kimliği ikinci SRV kaydı üretmez.
+- Sunucu yeni servis oluşturmayı ayrı `/api/services` POST işlemiyle atomik olarak kaydeder ve diskten doğrular.
+- Aynı müşteri/cihazın ileride gerçek yeni servis açması engellenmez.
+- HF2 servis listesi, A5 baskı ve SMS davranışı korunmuştur.
