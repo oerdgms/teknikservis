@@ -6,7 +6,7 @@ from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
 from pathlib import Path
 
-APP_VERSION = '2.6.6-crm1-hf3'
+APP_VERSION = '2.6.6-crm1-hf3.1'
 PORT = int(os.environ.get('PORT', '8972'))
 PUBLIC_PORT = int(os.environ.get('PUBLIC_PORT', '8973'))
 HOST = os.environ.get('HOST', '0.0.0.0')
@@ -441,7 +441,7 @@ def _public_service(rec, settings):
 _load_sessions()
 
 class Handler(SimpleHTTPRequestHandler):
-    server_version = 'TeknikServisPro/2.6.6-crm1-hf3'
+    server_version = 'TeknikServisPro/2.6.6-crm1-hf3.1'
 
     def log_message(self, fmt, *args):
         try:
@@ -502,42 +502,6 @@ class Handler(SimpleHTTPRequestHandler):
             if p == '/api/auth/status':
                 db = read_db(); u = session_user(self.headers)
                 return self.send_json({'setupRequired': len(db['users']) == 0, 'authenticated': bool(u), 'user': u})
-            if p == '/api/services':
-                if not self.auth(): return
-                db=read_db()
-                incoming=body.get('service') if isinstance(body.get('service'),dict) else {}
-                customer=body.get('customer') if isinstance(body.get('customer'),dict) else None
-                device=body.get('device') if isinstance(body.get('device'),dict) else None
-                request_id=str(body.get('requestId') or self.headers.get('X-Idempotency-Key') or incoming.get('clientRequestId') or '').strip()
-                if not request_id:
-                    return self.send_json({'error':'İşlem kimliği eksik; kayıt güvenli şekilde oluşturulamadı'},400)
-                # Aynı tarayıcı isteği ağ kopması / tekrar gönderim nedeniyle yeniden ulaşırsa ikinci servis oluşturma.
-                existing=next((x for x in db.get('serviceRecords',[]) if str(x.get('clientRequestId',''))==request_id),None)
-                if existing:
-                    return self.send_json({'success':True,'duplicate':True,'serviceNo':existing.get('serviceNo',''), **db_summary(db)})
-                if customer:
-                    ci=next((i for i,x in enumerate(db.get('customers',[])) if str(x.get('id'))==str(customer.get('id'))),None)
-                    if ci is None: db.setdefault('customers',[]).append(customer)
-                    else: db['customers'][ci]=customer
-                if device:
-                    di=next((i for i,x in enumerate(db.get('devices',[])) if str(x.get('id'))==str(device.get('id'))),None)
-                    if di is None: db.setdefault('devices',[]).append(device)
-                    else: db['devices'][di]=device
-                incoming['clientRequestId']=request_id
-                # Servis numarası çakışırsa sunucu yeni numarayı güvenli biçimde üretir.
-                wanted=str(incoming.get('serviceNo',''))
-                if any(str(x.get('serviceNo',''))==wanted for x in db.get('serviceRecords',[])):
-                    year=time.strftime('%Y'); max_no=0
-                    for x in db.get('serviceRecords',[]):
-                        sn=str(x.get('serviceNo',''))
-                        parts=sn.split('-')
-                        if len(parts)==3 and parts[0]=='SRV' and parts[1]==year and parts[2].isdigit(): max_no=max(max_no,int(parts[2]))
-                    incoming['serviceNo']=f"SRV-{year}-{max_no+1:04d}"
-                db.setdefault('serviceRecords',[]).append(incoming)
-                backup_current_db(); write_db(db)
-                verified=read_db(); saved=next((x for x in verified.get('serviceRecords',[]) if str(x.get('clientRequestId',''))==request_id),None)
-                if not saved: return self.send_json({'error':'Kayıt disk doğrulaması başarısız'},500)
-                return self.send_json({'success':True,'duplicate':False,'serviceNo':saved.get('serviceNo',''), **db_summary(verified)})
             if p == '/api/users':
                 if not self.auth(admin=True): return
                 return self.send_json([safe_user(x) for x in read_db()['users']])
@@ -605,6 +569,42 @@ class Handler(SimpleHTTPRequestHandler):
                 if len(np)<6: return self.send_json({'error':'Yeni şifre en az 6 karakter olmalı'},400)
                 user['passwordHash']=hash_password(np); backup_current_db(); write_db(db)
                 return self.send_json({'success':True})
+            if p == '/api/services':
+                if not self.auth(): return
+                db=read_db()
+                incoming=body.get('service') if isinstance(body.get('service'),dict) else {}
+                customer=body.get('customer') if isinstance(body.get('customer'),dict) else None
+                device=body.get('device') if isinstance(body.get('device'),dict) else None
+                request_id=str(body.get('requestId') or self.headers.get('X-Idempotency-Key') or incoming.get('clientRequestId') or '').strip()
+                if not request_id:
+                    return self.send_json({'error':'İşlem kimliği eksik; kayıt güvenli şekilde oluşturulamadı'},400)
+                # Aynı tarayıcı isteği ağ kopması / tekrar gönderim nedeniyle yeniden ulaşırsa ikinci servis oluşturma.
+                existing=next((x for x in db.get('serviceRecords',[]) if str(x.get('clientRequestId',''))==request_id),None)
+                if existing:
+                    return self.send_json({'success':True,'duplicate':True,'serviceNo':existing.get('serviceNo',''), **db_summary(db)})
+                if customer:
+                    ci=next((i for i,x in enumerate(db.get('customers',[])) if str(x.get('id'))==str(customer.get('id'))),None)
+                    if ci is None: db.setdefault('customers',[]).append(customer)
+                    else: db['customers'][ci]=customer
+                if device:
+                    di=next((i for i,x in enumerate(db.get('devices',[])) if str(x.get('id'))==str(device.get('id'))),None)
+                    if di is None: db.setdefault('devices',[]).append(device)
+                    else: db['devices'][di]=device
+                incoming['clientRequestId']=request_id
+                # Servis numarası çakışırsa sunucu yeni numarayı güvenli biçimde üretir.
+                wanted=str(incoming.get('serviceNo',''))
+                if any(str(x.get('serviceNo',''))==wanted for x in db.get('serviceRecords',[])):
+                    year=time.strftime('%Y'); max_no=0
+                    for x in db.get('serviceRecords',[]):
+                        sn=str(x.get('serviceNo',''))
+                        parts=sn.split('-')
+                        if len(parts)==3 and parts[0]=='SRV' and parts[1]==year and parts[2].isdigit(): max_no=max(max_no,int(parts[2]))
+                    incoming['serviceNo']=f"SRV-{year}-{max_no+1:04d}"
+                db.setdefault('serviceRecords',[]).append(incoming)
+                backup_current_db(); write_db(db)
+                verified=read_db(); saved=next((x for x in verified.get('serviceRecords',[]) if str(x.get('clientRequestId',''))==request_id),None)
+                if not saved: return self.send_json({'error':'Kayıt disk doğrulaması başarısız'},500)
+                return self.send_json({'success':True,'duplicate':False,'serviceNo':saved.get('serviceNo',''), **db_summary(verified)})
             if p == '/api/users':
                 if not self.auth(admin=True): return
                 db=read_db(); name=str(body.get('name','')).strip(); username=str(body.get('username','')).strip(); password=str(body.get('password',''))

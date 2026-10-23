@@ -1,4 +1,4 @@
-# v2.6.6 CRM1 Hotfix3 — Müşteri / Ürün / Servis Kabul Akışı
+# v2.6.6 CRM1 Hotfix3.1 — Müşteri / Ürün / Servis Kabul Akışı
 
 - Yeni servis ekranı 4 adımlı CRM görsel akışına geçirildi.
 - Müşteri arama ve yeni müşteri butonu belirginleştirildi.
@@ -56,3 +56,9 @@
 - Sunucu yeni servis oluşturmayı ayrı `/api/services` POST işlemiyle atomik olarak kaydeder ve diskten doğrular.
 - Aynı müşteri/cihazın ileride gerçek yeni servis açması engellenmez.
 - HF2 servis listesi, A5 baskı ve SMS davranışı korunmuştur.
+
+
+## Hotfix3.1 — Yeni servis 404 düzeltmesi
+- HF3 mükerrer koruma POST kodunun yanlışlıkla GET işleyicisine yerleşmesi düzeltildi.
+- `/api/services` POST yeniden aktif; idempotency/mükerrer koruması korunuyor.
+- Mevcut DB, A5 baskı, SMS ve CRM görünümü değiştirilmedi.
